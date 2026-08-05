@@ -3,117 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRAVAFILT S.A. | Centro de Costos Embolsado</title>
+    <title>GRAVAFILT S.A. | Centro de Costos Embolsado Avanzado</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librería CryptoJS para Cifrado y Hashing -->
+    <!-- CryptoJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between p-4 md:p-8">
 
-    <!-- ========================================== -->
-    <!-- CAPA DE SEGURIDAD 1: LOGIN AUTÓNOMO        -->
-    <!-- ========================================== -->
+    <!-- LOGIN -->
     <div id="sec-login" class="max-w-md w-full mx-auto my-auto p-6">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
             <div class="text-center space-y-2">
                 <h1 class="text-2xl font-extrabold text-white tracking-tight">GRAVAFILT S.A.</h1>
-                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Acceso Seguro: Sector Embolsado</p>
-                <p class="text-slate-400 text-xs mt-1">Ingrese sus credenciales para acceder al módulo independiente.</p>
+                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Parametrización de Embolsado</p>
             </div>
             <form onsubmit="validarAcceso(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Usuario / Correo Directivo</label>
-                    <input type="email" id="usr-login" required placeholder="correo@empresa.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition">
+                    <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Usuario Directivo</label>
+                    <input type="email" id="usr-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Contraseña</label>
-                    <input type="password" id="pwd-login" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition">
+                    <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="pwd-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500">
                 </div>
                 <div id="msg-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center">Credenciales incorrectas</div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition text-sm shadow-lg shadow-amber-600/20">
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition text-sm">
                     Desbloquear Módulo
                 </button>
             </form>
-            <div class="text-center border-t border-slate-800 pt-4">
-                <p class="text-[10px] text-slate-500">Sistema Standalone | Cifrado Front-End AES-256</p>
-            </div>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- PANTALLA PRINCIPAL DEL MÓDULO (PROTEGIDA)  -->
-    <!-- ========================================== -->
-    <div id="sec-dashboard" class="hidden max-w-6xl w-full mx-auto space-y-6">
+    <!-- DASHBOARD PARAMÉTRICO -->
+    <div id="sec-dashboard" class="hidden max-w-7xl w-full mx-auto space-y-6">
         
-        <!-- Header -->
+        <!-- Header & KPIs Consolidados -->
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-2xl">
             <div>
-                <h1 class="text-2xl font-extrabold text-white tracking-tight">GRAVAFILT S.A.</h1>
-                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Centro de Costos Independiente: Eslabón Embolsado</p>
+                <h1 class="text-2xl font-extrabold text-white">GRAVAFILT S.A.</h1>
+                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Calculadora Dinámica de Costos Separables</p>
             </div>
-            <div class="bg-slate-950 px-5 py-3 rounded-xl border border-slate-800 text-right w-full md:w-auto flex justify-between md:block">
-                <span class="text-xs text-slate-400 block">Costo Separable Resultante:</span>
-                <span id="kpi-costo-tn" class="text-2xl font-black text-amber-400">$ 0,00 / tn</span>
-            </div>
-        </div>
-
-        <!-- Parámetros Principales de Operación -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <label class="text-xs font-semibold uppercase text-slate-400 block">Producción Mensual (Bolsas 25kg)</label>
-                <input type="number" id="inp-bolsas" value="40000" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:border-amber-500 focus:outline-none font-mono">
-                <span class="text-[11px] text-slate-500 block">Volumen equivalente: <strong id="lbl-tn" class="text-slate-200">1.000,00 tn</strong></span>
-            </div>
-
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <label class="text-xs font-semibold uppercase text-slate-400 block">% Merma / Rotura de Bolsas</label>
-                <input type="number" step="0.1" id="inp-merma" value="1.5" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:border-amber-500 focus:outline-none font-mono">
-                <span class="text-[11px] text-slate-500 block">Ajuste técnico sobre insumos</span>
-            </div>
-
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <label class="text-xs font-semibold uppercase text-slate-400 block">Precio Objetivo Bolsa ($)</label>
-                <input type="number" step="0.01" id="inp-precio" value="3.50" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:border-amber-500 focus:outline-none font-mono">
-                <span class="text-[11px] text-slate-500 block">Equivalente nominal: <strong id="lbl-precio-tn" class="text-slate-200">$ 140,00 / tn</strong></span>
+            <div class="flex gap-4 w-full md:w-auto">
+                <div class="bg-slate-950 px-5 py-3 rounded-xl border border-slate-800 text-right flex-1">
+                    <span class="text-xs text-slate-400 block">Costo Operativo Horario:</span>
+                    <span id="kpi-costo-hora" class="text-xl font-black text-amber-400">$ 0,00 / hs</span>
+                </div>
+                <div class="bg-slate-950 px-5 py-3 rounded-xl border border-slate-800 text-right flex-1">
+                    <span class="text-xs text-slate-400 block">Costo Separable Unitario:</span>
+                    <span id="kpi-costo-tn" class="text-2xl font-black text-emerald-400">$ 0,00 / tn</span>
+                </div>
             </div>
         </div>
 
-        <!-- Tabla Estática de Rubros en JS -->
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-xl">
-            <div class="flex justify-between items-center">
-                <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Desglose Operativo del Sector (Costos Fijos & Variables)</h2>
+        <!-- VARIABLES OPERATIVAS GENERALES -->
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+            <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">1. Parámetros Operativos de Planta</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Presentación de Empaque</label>
+                    <select id="cfg-tipo-empaque" onchange="actualizarEmpaque(); recalcular();" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs font-semibold focus:border-amber-500">
+                        <option value="25">Bolsa 25 kg</option>
+                        <option value="50">Bolsa 50 kg</option>
+                        <option value="1000">Big Bag 1.000 kg</option>
+                    </select>
+                </div>
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Velocidad Envasado (Unidades/hs)</label>
+                    <input type="number" id="cfg-velocidad-hs" value="400" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs font-mono">
+                </div>
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Horas Operativas por Turno</label>
+                    <input type="number" id="cfg-horas-turno" value="8" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs font-mono">
+                </div>
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Capacidad Procesada Estimada</label>
+                    <div id="lbl-capacidad-tn-hs" class="text-sm font-bold text-slate-200 mt-1">10,00 tn/hs</div>
+                </div>
             </div>
-            <div id="tabla-rubros" class="overflow-x-auto"></div>
         </div>
 
-        <!-- Botón de Exportación -->
+        <!-- MATRIZ EDICIÓN DE COSTOS DIRECTOS (EDITABLES) -->
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+            <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">2. Componentes y Verticales de Costo (Campos Editables)</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase bg-slate-950">
+                            <th class="p-3">Vertical / Rubro</th>
+                            <th class="p-3">Unidad de Medida</th>
+                            <th class="p-3">Costo Base Unitario ($)</th>
+                            <th class="p-3">Consumo / Insumo por Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-xs">
+                        <!-- INSUMOS -->
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-semibold text-white">Bolsa / Envase Físico (Polipropileno/PE)</td>
+                            <td class="p-3 text-slate-400">$/Unidad envase</td>
+                            <td class="p-3"><input type="number" step="0.01" id="v-costo-bolsa" value="0.35" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
+                            <td class="p-3 text-slate-400">Calculado dinámicamente según Velocidad/hs</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-semibold text-white">Insumos Embalaje (Pallets, Stretch, Hilo/Sellado)</td>
+                            <td class="p-3 text-slate-400">$/Hora de proceso</td>
+                            <td class="p-3"><input type="number" step="0.01" id="v-insumos-hs" value="48.00" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
+                            <td class="p-3 text-slate-400">Fijo proporcional por hora</td>
+                        </tr>
+                        <!-- MANO DE OBRA -->
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-semibold text-white">Mano de Obra Directa (Dotación + Cargas Social/Extras)</td>
+                            <td class="p-3 text-slate-400">$/Hora cuadrilla</td>
+                            <td class="p-3"><input type="number" step="0.01" id="v-mo-hs" value="562.50" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
+                            <td class="p-3 text-slate-400">Dotación asignada al sector</td>
+                        </tr>
+                        <!-- ENERGÍA ELÉCTRICA -->
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-semibold text-white">Consumo Eléctrico Potencia (Motores/Envasadora/Cintas)</td>
+                            <td class="p-3 text-slate-400">kW/h consumidos</td>
+                            <td class="p-3"><input type="number" step="0.01" id="v-kw-precio" value="2.50" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-slate-200 font-mono" placeholder="Tarifa $/kWh"></td>
+                            <td class="p-3"><input type="number" step="0.1" id="v-kw-consumo" value="60.0" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono" placeholder="kW/hs"></td>
+                        </tr>
+                        <!-- MANTENIMIENTO -->
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-semibold text-white">Mantenimiento Preventivo & Repuestos Cosedora/Planta</td>
+                            <td class="p-3 text-slate-400">$/Hora operativa</td>
+                            <td class="p-3"><input type="number" step="0.01" id="v-maint-hs" value="75.00" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
+                            <td class="p-3 text-slate-400">Tasa de desgaste mecánico</td>
+                        </tr>
+                        <!-- MERMAS TÉCNICAS -->
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-semibold text-white">Mermas Técnicas (% Rotura o Polvo Remanente)</td>
+                            <td class="p-3 text-slate-400">% Porcentaje sobre costo insumo</td>
+                            <td class="p-3"><input type="number" step="0.1" id="v-merma-pct" value="1.5" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
+                            <td class="p-3 text-slate-400">Recargo por pérdida material</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RESULTADOS CONSOLIDADOS: $/HORA Y $/TONELADA -->
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+            <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">3. Desglose Estructurado: Costo $/Hora y Costo $/Tonelada</h2>
+            <div id="tabla-desglose" class="overflow-x-auto"></div>
+        </div>
+
+        <!-- EXPORTAR -->
         <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
             <div>
-                <h3 class="text-sm font-bold text-white">Exportación de Parámetro para Matriz VNR</h3>
-                <p class="text-xs text-slate-400">Guarda localmente el costo separable encriptado en AES-256 para ser leído en la matriz principal.</p>
+                <h3 class="text-sm font-bold text-white">Persistencia y Enlace Cifrado VNR</h3>
+                <p class="text-xs text-slate-400">Genera la matriz cifrada en AES-256 para transferir al Tablero Principal.</p>
             </div>
             <button onclick="guardarYExportar()" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
-                <span>💾 Guardar & Exportar a Matriz VNR</span>
+                <span>💾 Guardar & Exportar Parámetros a VNR</span>
             </button>
         </div>
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- LÓGICA JAVASCRIPT & AUTENTICACIÓN          -->
-    <!-- ========================================== -->
+    <!-- SCRIPT DE CÁLCULO Y CIFRADO -->
     <script>
-        // LÓGICA DE VALIDACIÓN DIRECTA CON TUS CREDENCIALES
         function validarAcceso(e) {
             e.preventDefault();
             const u = document.getElementById('usr-login').value.trim();
             const p = document.getElementById('pwd-login').value.trim();
 
-            const USUARIO_CORRECTO = "eichpredyasociados@gmail.com";
-            const CLAVE_CORRECTA   = "Joaquin#7";
-
-            if (u === USUARIO_CORRECTO && p === CLAVE_CORRECTA) {
+            if (u === "eichpredyasociados@gmail.com" && p === "Joaquin#7") {
                 document.getElementById('sec-login').classList.add('hidden');
                 document.getElementById('sec-dashboard').classList.remove('hidden');
                 recalcular();
@@ -122,78 +178,100 @@
             }
         }
 
-        // ESTRUCTURA BASE DE RUBROS OPERATIVOS
-        let rubrosSector = [
-            { concepto: 'Sueldos Personal Embolsado & Estibaje', cat: 'mano_de_obra', fijo: 4500.00, varBolsa: 0.0000 },
-            { concepto: 'Consumo Eléctrico Envasadora & Cintas', cat: 'energia', fijo: 1200.00, varBolsa: 0.0000 },
-            { concepto: 'Bolsas de Polipropileno / PE (25kg)', cat: 'insumos', fijo: 0.00, varBolsa: 0.3500 },
-            { concepto: 'Pallets Madera y Film Stretch', cat: 'insumos', fijo: 0.00, varBolsa: 0.1200 },
-            { concepto: 'Mantenimiento Preventivo e Insumos Cosido', cat: 'mantenimiento', fijo: 600.00, varBolsa: 0.0000 }
-        ];
-
-        let costoSeparableFinalTn = 0;
+        function actualizarEmpaque() {
+            const kg = Number(document.getElementById('cfg-tipo-empaque').value);
+            const inputVel = document.getElementById('cfg-velocidad-hs');
+            
+            // Ajuste automático de velocidad promedio según empaque
+            if (kg === 25) inputVel.value = 400;
+            else if (kg === 50) inputVel.value = 250;
+            else if (kg === 1000) inputVel.value = 15;
+        }
 
         function recalcular() {
-            const bolsas = Number(document.getElementById('inp-bolsas').value) || 0;
-            const merma = Number(document.getElementById('inp-merma').value) || 0;
-            const precioBolsa = Number(document.getElementById('inp-precio').value) || 0;
+            // 1. Obtener Variables Operativas
+            const kgEmpaque = Number(document.getElementById('cfg-tipo-empaque').value) || 25;
+            const unidadesHs = Number(document.getElementById('cfg-velocidad-hs').value) || 0;
+            
+            const tnPorHora = (unidadesHs * kgEmpaque) / 1000;
+            document.getElementById('lbl-capacidad-tn-hs').innerText = tnPorHora.toFixed(2) + ' tn/hs';
 
-            const tnMes = bolsas * 0.025; // 25 kg = 0.025 tn
-            const precioTn = precioBolsa * 40; // 40 bolsas por tonelada
+            // 2. Componentes de Costo
+            const costoBolsaUn = Number(document.getElementById('v-costo-bolsa').value) || 0;
+            const mermaPct = Number(document.getElementById('v-merma-pct').value) || 0;
+            const insumosVariariosHs = Number(document.getElementById('v-insumos-hs').value) || 0;
+            const moHs = Number(document.getElementById('v-mo-hs').value) || 0;
+            
+            const kwPrecio = Number(document.getElementById('v-kw-precio').value) || 0;
+            const kwConsumo = Number(document.getElementById('v-kw-consumo').value) || 0;
+            const energiaHs = kwPrecio * kwConsumo;
 
-            document.getElementById('lbl-tn').innerText = tnMes.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' tn';
-            document.getElementById('lbl-precio-tn').innerText = '$ ' + precioTn.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' / tn';
+            const maintHs = Number(document.getElementById('v-maint-hs').value) || 0;
 
-            let acumuladoDirecto = 0;
+            // Costo Envase total por hora incluyendo merma
+            const costoEnvasesHs = (unidadesHs * costoBolsaUn) * (1 + (mermaPct / 100));
+
+            // 3. Agrupación de Conjuntos ($/Hora y $/Tonelada)
+            const rubros = [
+                { concepto: 'Insumo Envase Directo (con merma)', costoHs: costoEnvasesHs },
+                { concepto: 'Insumos Embalaje (Pallet, Stretch, Hilo)', costoHs: insumosVariariosHs },
+                { concepto: 'Mano de Obra Directa del Sector', costoHs: moHs },
+                { concepto: 'Consumo Energía Eléctrica', costoHs: energiaHs },
+                { concepto: 'Mantenimiento Mecánico y Repuestos', costoHs: maintHs }
+            ];
+
+            let totalCostoHora = 0;
             let html = `
             <table class="w-full text-left border-collapse min-w-[650px]">
                 <thead>
                     <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase bg-slate-950">
-                        <th class="p-3">Concepto / Rubro</th>
-                        <th class="p-3">Categoría</th>
-                        <th class="p-3 text-right">Fijo ($/mes)</th>
-                        <th class="p-3 text-right">Var ($/bolsa)</th>
-                        <th class="p-3 text-right text-amber-400">Impacto ($/tn)</th>
+                        <th class="p-3">Vertical de Costo</th>
+                        <th class="p-3 text-right text-amber-400">Costo ($ / Hora)</th>
+                        <th class="p-3 text-right text-emerald-400">Impacto ($ / Tonelada)</th>
+                        <th class="p-3 text-right">% Participación</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800 text-sm">`;
+                <tbody class="divide-y divide-slate-800 text-xs">`;
 
-            rubrosSector.forEach(r => {
-                let vBolsa = r.varBolsa;
-                if (r.cat === 'insumos') {
-                    vBolsa = vBolsa * (1 + (merma / 100));
-                }
-                
-                const costoTotalRubro = r.fijo + (vBolsa * bolsas);
-                const impactoTn = tnMes > 0 ? (costoTotalRubro / tnMes) : 0;
-                acumuladoDirecto += costoTotalRubro;
+            rubros.forEach(r => totalCostoHora += r.costoHs);
+            const totalCostoTn = tnPorHora > 0 ? (totalCostoHora / tnPorHora) : 0;
+
+            rubros.forEach(r => {
+                const impactoTn = tnPorHora > 0 ? (r.costoHs / tnPorHora) : 0;
+                const participacion = totalCostoHora > 0 ? ((r.costoHs / totalCostoHora) * 100) : 0;
 
                 html += `
                 <tr class="hover:bg-slate-800/40">
                     <td class="p-3 font-semibold text-white">${r.concepto}</td>
-                    <td class="p-3"><span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded border border-slate-700 uppercase font-mono">${r.cat}</span></td>
-                    <td class="p-3 text-right text-slate-300">$ ${r.fijo.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right text-slate-300">$ ${vBolsa.toFixed(4)}</td>
-                    <td class="p-3 text-right font-bold text-amber-400">$ ${impactoTn.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-bold text-amber-400">$ ${r.costoHs.toLocaleString('es-AR', {minimumFractionDigits: 2})} / hs</td>
+                    <td class="p-3 text-right font-bold text-emerald-400">$ ${impactoTn.toLocaleString('es-AR', {minimumFractionDigits: 2})} / tn</td>
+                    <td class="p-3 text-right text-slate-400">${participacion.toFixed(1)} %</td>
                 </tr>`;
             });
 
-            html += `</tbody></table>`;
-            document.getElementById('tabla-rubros').innerHTML = html;
+            html += `
+                <tr class="bg-slate-950 font-extrabold text-sm border-t-2 border-slate-700">
+                    <td class="p-3 text-white uppercase">TOTAL COSTO SEPARABLE EMBOLSADO</td>
+                    <td class="p-3 text-right text-amber-400">$ ${totalCostoHora.toLocaleString('es-AR', {minimumFractionDigits: 2})} / hs</td>
+                    <td class="p-3 text-right text-emerald-400">$ ${totalCostoTn.toLocaleString('es-AR', {minimumFractionDigits: 2})} / tn</td>
+                    <td class="p-3 text-right text-white">100,0 %</td>
+                </tr>
+            </tbody></table>`;
 
-            costoSeparableFinalTn = tnMes > 0 ? (acumuladoDirecto / tnMes) : 0;
-            document.getElementById('kpi-costo-tn').innerText = '$ ' + costoSeparableFinalTn.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' / tn';
+            document.getElementById('tabla-desglose').innerHTML = html;
+            document.getElementById('kpi-costo-hora').innerText = '$ ' + totalCostoHora.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' / hs';
+            document.getElementById('kpi-costo-tn').innerText = '$ ' + totalCostoTn.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' / tn';
+
+            window.costoSeparableFinalTn = totalCostoTn;
         }
 
-        // CAPA 2 SEGURIDAD: Cifrado AES-256 para enviar el costo separable a la matriz
         function guardarYExportar() {
             const claveSecreta = "GRAVAFILT_SECURE_KEY_2026";
-            const payload = JSON.stringify({ costoTn: costoSeparableFinalTn, fecha: new Date() });
-            
+            const payload = JSON.stringify({ costoTn: window.costoSeparableFinalTn || 0, fecha: new Date() });
             const cifrado = CryptoJS.AES.encrypt(payload, claveSecreta).toString();
             
             localStorage.setItem('GF_EMBOLSADO_DATA', cifrado);
-            alert('Parámetro cifrado y exportado con éxito. Valor actual: $' + costoSeparableFinalTn.toFixed(2) + ' / tn');
+            alert('Parámetros parametrizados y exportados con éxito. Costo separable resultante: $' + (window.costoSeparableFinalTn || 0).toFixed(2) + ' / tn');
         }
     </script>
 </body>
