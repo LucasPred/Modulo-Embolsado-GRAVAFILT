@@ -6,7 +6,7 @@
     <title>GRAVAFILT S.A. | Centro de Costos Embolsado</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librería CryptoJS para Cifrado y Hashing (Doble Capa de Seguridad) -->
+    <!-- Librería CryptoJS para Cifrado y Hashing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between p-4 md:p-8">
@@ -23,8 +23,8 @@
             </div>
             <form onsubmit="validarAcceso(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Usuario Directivo</label>
-                    <input type="text" id="usr-login" required placeholder="admin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition">
+                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Usuario / Correo Directivo</label>
+                    <input type="email" id="usr-login" required placeholder="correo@empresa.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Contraseña</label>
@@ -101,12 +101,26 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- LOGICA JAVASCRIPT & AUTENTICACION           -->
+    <!-- LÓGICA JAVASCRIPT & AUTENTICACIÓN          -->
     <!-- ========================================== -->
     <script>
-        // HASH SHA-256 de las credenciales autorizadas (Valores por defecto: admin / admin)
-        const HASH_USUARIO = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"; 
-        const HASH_CLAVE   = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; 
+        // LÓGICA DE VALIDACIÓN DIRECTA CON TUS CREDENCIALES
+        function validarAcceso(e) {
+            e.preventDefault();
+            const u = document.getElementById('usr-login').value.trim();
+            const p = document.getElementById('pwd-login').value.trim();
+
+            const USUARIO_CORRECTO = "eichpredyasociados@gmail.com";
+            const CLAVE_CORRECTA   = "Joaquin#7";
+
+            if (u === USUARIO_CORRECTO && p === CLAVE_CORRECTA) {
+                document.getElementById('sec-login').classList.add('hidden');
+                document.getElementById('sec-dashboard').classList.remove('hidden');
+                recalcular();
+            } else {
+                document.getElementById('msg-error').classList.remove('hidden');
+            }
+        }
 
         // ESTRUCTURA BASE DE RUBROS OPERATIVOS
         let rubrosSector = [
@@ -118,23 +132,6 @@
         ];
 
         let costoSeparableFinalTn = 0;
-
-        function validarAcceso(e) {
-            e.preventDefault();
-            const u = document.getElementById('usr-login').value;
-            const p = document.getElementById('pwd-login').value;
-
-            const uHash = CryptoJS.SHA256(u).toString();
-            const pHash = CryptoJS.SHA256(p).toString();
-
-            if (uHash === HASH_USUARIO && pHash === HASH_CLAVE) {
-                document.getElementById('sec-login').classList.add('hidden');
-                document.getElementById('sec-dashboard').classList.remove('hidden');
-                recalcular();
-            } else {
-                document.getElementById('msg-error').classList.remove('hidden');
-            }
-        }
 
         function recalcular() {
             const bolsas = Number(document.getElementById('inp-bolsas').value) || 0;
