@@ -3,167 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRAVAFILT S.A. | Centro de Costos Embolsado Avanzado</title>
+    <title>GRAVAFILT S.A. | Centro de Monitoreo & Costeo de Embolsado</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- CryptoJS -->
+    <!-- Chart.js para visualización de desvíos y costos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS para exportación profesional directa a Excel (.xlsx) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- CryptoJS para cifrado AES-256 hacia Matriz VNR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between p-4 md:p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between p-3 md:p-6">
 
-    <!-- LOGIN -->
-    <div id="sec-login" class="max-w-md w-full mx-auto my-auto p-6">
+    <!-- ========================================== -->
+    <!-- CAPA DE SEGURIDAD: LOGIN DIRECTIVO         -->
+    <!-- ========================================== -->
+    <div id="sec-login" class="max-w-md w-full mx-auto my-auto p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
             <div class="text-center space-y-2">
+                <div class="inline-flex p-3 bg-amber-500/10 rounded-full text-amber-500 mb-1">
+                    <i class="fa-solid fa-industry text-2xl"></i>
+                </div>
                 <h1 class="text-2xl font-extrabold text-white tracking-tight">GRAVAFILT S.A.</h1>
-                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Parametrización de Embolsado</p>
+                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Planta de Embolsado & Doble Empaque</p>
+                <p class="text-slate-400 text-xs">Monitoreo de Tiempos, Desvíos y Costeo en Tiempo Real</p>
             </div>
             <form onsubmit="validarAcceso(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Usuario Directivo</label>
-                    <input type="email" id="usr-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500">
+                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Usuario Directivo</label>
+                    <input type="email" id="usr-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Contraseña</label>
-                    <input type="password" id="pwd-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500">
+                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Contraseña</label>
+                    <input type="password" id="pwd-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                 </div>
-                <div id="msg-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center">Credenciales incorrectas</div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition text-sm">
-                    Desbloquear Módulo
+                <div id="msg-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center font-medium">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciales no válidas
+                </div>
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl transition text-sm shadow-lg shadow-amber-600/20">
+                    Ingresar al Centro de Control
                 </button>
             </form>
+            <div class="text-center border-t border-slate-800 pt-4">
+                <p class="text-[10px] text-slate-500">Módulo Standalone | Cifrado AES-256 | LocalStorage Sync</p>
+            </div>
         </div>
     </div>
 
-    <!-- DASHBOARD PARAMÉTRICO -->
-    <div id="sec-dashboard" class="hidden max-w-7xl w-full mx-auto space-y-6">
+    <!-- ========================================== -->
+    <!-- DASHBOARD PRINCIPAL PROTEGIDO             -->
+    <!-- ========================================== -->
+    <div id="sec-dashboard" class="hidden max-w-[1500px] w-full mx-auto space-y-6">
         
-        <!-- Header & KPIs Consolidados -->
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-2xl">
-            <div>
-                <h1 class="text-2xl font-extrabold text-white">GRAVAFILT S.A.</h1>
-                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Calculadora Dinámica de Costos Separables</p>
-            </div>
-            <div class="flex gap-4 w-full md:w-auto">
-                <div class="bg-slate-950 px-5 py-3 rounded-xl border border-slate-800 text-right flex-1">
-                    <span class="text-xs text-slate-400 block">Costo Operativo Horario:</span>
-                    <span id="kpi-costo-hora" class="text-xl font-black text-amber-400">$ 0,00 / hs</span>
+        <!-- HEADER SUPERIOR CON KPIs CLAVE -->
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-2xl">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+                    <i class="fa-solid fa-boxes-packing text-2xl"></i>
                 </div>
-                <div class="bg-slate-950 px-5 py-3 rounded-xl border border-slate-800 text-right flex-1">
-                    <span class="text-xs text-slate-400 block">Costo Separable Unitario:</span>
-                    <span id="kpi-costo-tn" class="text-2xl font-black text-emerald-400">$ 0,00 / tn</span>
+                <div>
+                    <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                        GRAVAFILT S.A. 
+                        <span class="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Doble Empaque 25kg + Big Bag</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Centro Operativo de Tiempos, Desvíos, Eficiencia OEE e Impacto Económico</p>
+                </div>
+            </div>
+
+            <!-- KPIs de Alarma & Eficiencia -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+                <div id="card-oee" class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">OEE del Sector</span>
+                    <span id="kpi-oee" class="text-lg font-black text-emerald-400">100.0%</span>
+                    <span id="badge-oee" class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold">ÓPTIMO</span>
+                </div>
+                <div class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">Desvío por Ineficiencia</span>
+                    <span id="kpi-desvio-hs" class="text-lg font-black text-amber-400">0.00 hs</span>
+                    <span id="kpi-desvio-pct" class="text-[9px] text-slate-400 block">+0.0% vs Teórico</span>
+                </div>
+                <div class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">Costo / Hora Real</span>
+                    <span id="kpi-costo-hora" class="text-lg font-black text-amber-400">$ 0,00 / hs</span>
+                    <span class="text-[9px] text-slate-500 block">Incluye Paradas</span>
+                </div>
+                <div class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">Costo Separable / Tn</span>
+                    <span id="kpi-costo-tn" class="text-xl font-black text-emerald-400">$ 0,00 / tn</span>
+                    <span class="text-[9px] text-emerald-500 block">Parámetro Matriz VNR</span>
                 </div>
             </div>
         </div>
 
-        <!-- VARIABLES OPERATIVAS GENERALES -->
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-            <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">1. Parámetros Operativos de Planta</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Presentación de Empaque</label>
-                    <select id="cfg-tipo-empaque" onchange="actualizarEmpaque(); recalcular();" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs font-semibold focus:border-amber-500">
-                        <option value="25">Bolsa 25 kg</option>
-                        <option value="50">Bolsa 50 kg</option>
-                        <option value="1000">Big Bag 1.000 kg</option>
-                    </select>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Velocidad Envasado (Unidades/hs)</label>
-                    <input type="number" id="cfg-velocidad-hs" value="400" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs font-mono">
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Horas Operativas por Turno</label>
-                    <input type="number" id="cfg-horas-turno" value="8" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs font-mono">
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                    <label class="text-[11px] font-semibold text-slate-400 uppercase block mb-1">Capacidad Procesada Estimada</label>
-                    <div id="lbl-capacidad-tn-hs" class="text-sm font-bold text-slate-200 mt-1">10,00 tn/hs</div>
-                </div>
-            </div>
-        </div>
+        <!-- PANEL DE CONTROL EN PESTAÑAS Y SECCIONES -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- MATRIZ EDICIÓN DE COSTOS DIRECTOS (EDITABLES) -->
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-            <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">2. Componentes y Verticales de Costo (Campos Editables)</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px]">
-                    <thead>
-                        <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase bg-slate-950">
-                            <th class="p-3">Vertical / Rubro</th>
-                            <th class="p-3">Unidad de Medida</th>
-                            <th class="p-3">Costo Base Unitario ($)</th>
-                            <th class="p-3">Consumo / Insumo por Hora</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800 text-xs">
-                        <!-- INSUMOS -->
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Bolsa / Envase Físico (Polipropileno/PE)</td>
-                            <td class="p-3 text-slate-400">$/Unidad envase</td>
-                            <td class="p-3"><input type="number" step="0.01" id="v-costo-bolsa" value="0.35" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
-                            <td class="p-3 text-slate-400">Calculado dinámicamente según Velocidad/hs</td>
-                        </tr>
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Insumos Embalaje (Pallets, Stretch, Hilo/Sellado)</td>
-                            <td class="p-3 text-slate-400">$/Hora de proceso</td>
-                            <td class="p-3"><input type="number" step="0.01" id="v-insumos-hs" value="48.00" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
-                            <td class="p-3 text-slate-400">Fijo proporcional por hora</td>
-                        </tr>
-                        <!-- MANO DE OBRA -->
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Mano de Obra Directa (Dotación + Cargas Social/Extras)</td>
-                            <td class="p-3 text-slate-400">$/Hora cuadrilla</td>
-                            <td class="p-3"><input type="number" step="0.01" id="v-mo-hs" value="562.50" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
-                            <td class="p-3 text-slate-400">Dotación asignada al sector</td>
-                        </tr>
-                        <!-- ENERGÍA ELÉCTRICA -->
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Consumo Eléctrico Potencia (Motores/Envasadora/Cintas)</td>
-                            <td class="p-3 text-slate-400">kW/h consumidos</td>
-                            <td class="p-3"><input type="number" step="0.01" id="v-kw-precio" value="2.50" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-slate-200 font-mono" placeholder="Tarifa $/kWh"></td>
-                            <td class="p-3"><input type="number" step="0.1" id="v-kw-consumo" value="60.0" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono" placeholder="kW/hs"></td>
-                        </tr>
-                        <!-- MANTENIMIENTO -->
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Mantenimiento Preventivo & Repuestos Cosedora/Planta</td>
-                            <td class="p-3 text-slate-400">$/Hora operativa</td>
-                            <td class="p-3"><input type="number" step="0.01" id="v-maint-hs" value="75.00" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
-                            <td class="p-3 text-slate-400">Tasa de desgaste mecánico</td>
-                        </tr>
-                        <!-- MERMAS TÉCNICAS -->
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Mermas Técnicas (% Rotura o Polvo Remanente)</td>
-                            <td class="p-3 text-slate-400">% Porcentaje sobre costo insumo</td>
-                            <td class="p-3"><input type="number" step="0.1" id="v-merma-pct" value="1.5" oninput="recalcular()" class="bg-slate-950 border border-slate-700 rounded p-1.5 w-28 text-amber-400 font-mono"></td>
-                            <td class="p-3 text-slate-400">Recargo por pérdida material</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            <!-- COLUMNA IZQUIERDA: PARAMETRIZACIÓN & REGISTRO DE TURNOS (5 cols) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- CONFIGURACIÓN DEL DOBLE EMPAQUE & RECURSOS -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-sliders"></i> 1. Recurso & Estructura Doble Empaque
+                        </h2>
+                        <span class="text-[10px] text-slate-500 font-mono">Bolsa 25kg + Portabolsa BB</span>
+                    </div>
 
-        <!-- RESULTADOS CONSOLIDADOS: $/HORA Y $/TONELADA -->
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-            <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">3. Desglose Estructurado: Costo $/Hora y Costo $/Tonelada</h2>
-            <div id="tabla-desglose" class="overflow-x-auto"></div>
-        </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                            <label class="font-semibold text-slate-300 block">Capacidad Big Bag (Tn)</label>
+                            <input type="number" step="0.05" min="1.0" max="1.35" id="cfg-capacidad-bb" value="1.25" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500">
+                            <span class="text-[9px] text-slate-500 block">Rango: 1,00 a 1,35 Tn</span>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                            <label class="font-semibold text-slate-300 block">Bolsas 25kg / Big Bag</label>
+                            <div id="lbl-bolsas-per-bb" class="text-sm font-bold text-slate-200 p-1.5 font-mono">50 bolsas</div>
+                            <span class="text-[9px] text-slate-500 block">Calculado (Capacidad / 0.025)</span>
+                        </div>
 
-        <!-- EXPORTAR -->
-        <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
-            <div>
-                <h3 class="text-sm font-bold text-white">Persistencia y Enlace Cifrado VNR</h3>
-                <p class="text-xs text-slate-400">Genera la matriz cifrada en AES-256 para transferir al Tablero Principal.</p>
+                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                            <label class="font-semibold text-slate-300 block">Velocidad Óptima (Bolsas/hs)</label>
+                            <input type="number" id="cfg-vel-optima" value="400" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-emerald-400 font-mono font-bold focus:outline-none focus:border-amber-500">
+                            <span class="text-[9px] text-slate-500 block">Estándar medido en planta</span>
+                        </div>
+
+                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                            <label class="font-semibold text-slate-300 block">Rendimiento Teórico (Tn/hs)</label>
+                            <div id="lbl-tn-optima-hs" class="text-sm font-bold text-emerald-400 p-1.5 font-mono">10,00 Tn/hs</div>
+                            <span class="text-[9px] text-slate-500 block">Capacidad máxima por hora</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARGA EN TIEMPO REAL / REGISTRO DE TURNO CON CAUSALES -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch"></i> 2. Registro Operativo & Desvíos en Tiempo Real
+                        </h2>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">Carga de Datos</span>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                                <label class="font-semibold text-slate-300 block">Turno / Identificador</label>
+                                <input type="text" id="inp-turno-id" value="Turno Mañana - Lote 01" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-sans focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                                <label class="font-semibold text-slate-300 block">Bolsas 25kg Producidas</label>
+                                <input type="number" id="inp-bolsas-prod" value="2400" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                                <label class="font-semibold text-slate-300 block">Tiempo Real Empleado (hs)</label>
+                                <input type="number" step="0.1" id="inp-tiempo-real-hs" value="8.0" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono font-bold focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                                <label class="font-semibold text-slate-300 block">Tiempo Teórico Óptimo</label>
+                                <div id="lbl-tiempo-teorico-hs" class="text-sm font-bold text-emerald-400 p-1.5 font-mono">6,00 hs</div>
+                            </div>
+                        </div>
+
+                        <!-- DESGLOSE DE DESVÍOS Y CAUSALES -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
+                            <span class="text-[11px] font-bold text-slate-300 block border-b border-slate-800 pb-1">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Desglose de Paradas & Ineficiencias (Horas)
+                            </span>
+                            
+                            <div class="grid grid-cols-2 gap-2 text-[11px]">
+                                <div>
+                                    <label class="text-slate-400 block mb-0.5">Falta / Carga de Arena</label>
+                                    <input type="number" step="0.1" id="causa-arena" value="0.75" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 block mb-0.5">Falla Envasadora / Cosido</label>
+                                    <input type="number" step="0.1" id="causa-mecanica" value="0.5" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 block mb-0.5">Falta de Insumos (BB/Bolsa)</label>
+                                    <input type="number" step="0.1" id="causa-insumos" value="0.25" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 block mb-0.5">Atasco Cintas / Palletizado</label>
+                                    <input type="number" step="0.1" id="causa-logistica" value="0.5" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
+                                <span class="text-slate-400 font-semibold">Total Paradas Registradas:</span>
+                                <span id="lbl-total-paradas" class="font-mono font-bold text-amber-400">2,00 hs</span>
+                            </div>
+                        </div>
+
+                        <!-- BOTÓN PARA REGISTRAR EN EL HISTORIAL -->
+                        <button onclick="guardarEnHistorial()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20">
+                            <i class="fa-solid fa-floppy-disk"></i> Registra y Guarda este Turno en Historial
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MATRIZ DE ESTRUCTURA DE COSTOS DIRECTOS E INDIRECTOS -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-coins"></i> 3. Variables de Costos (Directos e Indirectos)
+                        </h2>
+                    </div>
+
+                    <div class="space-y-2 text-xs">
+                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Precio Bolsa 25kg ($)</label>
+                                <input type="number" step="0.01" id="costo-bolsa-25" value="0.35" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Precio Big Bag 1.25t ($)</label>
+                                <input type="number" step="0.10" id="costo-bigbag-un" value="12.50" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Stretch/Pallet ($/hs)</label>
+                                <input type="number" step="1" id="costo-stretch-hs" value="45.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Mano de Obra ($/hs)</label>
+                                <input type="number" step="1" id="costo-mo-hs" value="650.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Energía Eléctrica ($/hs)</label>
+                                <input type="number" step="1" id="costo-energia-hs" value="180.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Mantenimiento ($/hs)</label>
+                                <input type="number" step="1" id="costo-maint-hs" value="95.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Costos Indir./Deprec. ($/hs)</label>
+                                <input type="number" step="1" id="costo-indirectos-hs" value="120.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 text-[10px] block">Merma/Rotura (%)</label>
+                                <input type="number" step="0.1" id="costo-merma-pct" value="1.5" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <button onclick="guardarYExportar()" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
-                <span>💾 Guardar & Exportar Parámetros a VNR</span>
-            </button>
+
+            <!-- COLUMNA DERECHA: MONITOREO EN TIEMPO REAL & GRÁFICOS & HISTORIAL (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- MATRIZ DE DESVIOS & ALERTAS VISUALES POR COLORES -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line"></i> Dashboard en Tiempo Real: Ineficiencia, Ineficacia & Costos
+                        </h2>
+                        <span id="badge-status-general" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            <i class="fa-solid fa-circle text-[8px] mr-1"></i> OPERACIÓN NORMAL
+                        </span>
+                    </div>
+
+                    <!-- MATRIZ COMPARATIVA TEÓRICO vs REAL vs DESVÍO -->
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block">Procesado Real</span>
+                            <span id="disp-tn-real" class="text-lg font-black text-white">60.00 Tn</span>
+                            <span id="disp-bb-real" class="text-[10px] text-amber-400 block">48 Big Bags</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block">Rendimiento Real</span>
+                            <span id="disp-rend-real" class="text-lg font-black text-amber-400">7.50 Tn/hs</span>
+                            <span class="text-[10px] text-slate-500 block">vs 10.00 Tn/hs Óptimo</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block">Sobre-costo por Paradas</span>
+                            <span id="disp-sobrecosto" class="text-lg font-black text-red-400">$ 0,00</span>
+                            <span class="text-[10px] text-red-400/80 block">Pérdida por ineficiencia</span>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICOS DE DESVIOS Y DISTRIBUCIÓN DE PARADAS -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="text-[11px] font-bold text-slate-300 block">Distribución de Causales de Parada</span>
+                            <div class="h-44 relative flex items-center justify-center">
+                                <canvas id="chart-causales"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="text-[11px] font-bold text-slate-300 block">Desglose Estructurado de Costos ($/Tn)</span>
+                            <div class="h-44 relative flex items-center justify-center">
+                                <canvas id="chart-costos"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLA DETALLADA DE VERTICALES DE COSTOS ($/HS Y $/TN) -->
+                    <div class="overflow-x-auto border border-slate-800 rounded-xl">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-950 text-slate-400 uppercase text-[10px]">
+                                    <th class="p-2.5">Vertical / Rubro</th>
+                                    <th class="p-2.5 text-right">Costo ($/hs)</th>
+                                    <th class="p-2.5 text-right font-bold text-amber-400">Costo ($/Tn Real)</th>
+                                    <th class="p-2.5 text-right">Impacto %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-desglose-body" class="divide-y divide-slate-800 text-slate-200">
+                                <!-- Generado dinámicamente en JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- HISTORIAL COMPLETO DE TURNOS CON ACCIONES PROFESIONALES -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                            <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Historial Operativo de Registros Almacenados
+                            </h2>
+                            <p class="text-[10px] text-slate-400">Registros persistentes en el sitio para auditoría y exportación</p>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="exportarExcelProfesional()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20">
+                                <i class="fa-solid fa-file-excel"></i> Exportar a Excel (.xlsx)
+                            </button>
+                            <button onclick="exportarAMatrizVNR()" class="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-amber-600/20">
+                                <i class="fa-solid fa-share-nodes"></i> Sync Matriz VNR
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABLA HISTORIAL -->
+                    <div class="overflow-x-auto border border-slate-800 rounded-xl max-h-60 overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="sticky top-0 bg-slate-950 text-slate-400 uppercase text-[9px] z-10">
+                                <tr>
+                                    <th class="p-2">Fecha/Hora</th>
+                                    <th class="p-2">Turno/Lote</th>
+                                    <th class="p-2 text-right">Bolsas 25k</th>
+                                    <th class="p-2 text-right">Tn Totales</th>
+                                    <th class="p-2 text-right">Hs Real</th>
+                                    <th class="p-2 text-right text-amber-400">Paradas</th>
+                                    <th class="p-2 text-right text-emerald-400">Costo $/Tn</th>
+                                    <th class="p-2 text-center">OEE</th>
+                                    <th class="p-2 text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-historial-body" class="divide-y divide-slate-800 text-slate-300 font-mono text-[11px]">
+                                <!-- Dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
     </div>
 
-    <!-- SCRIPT DE CÁLCULO Y CIFRADO -->
+    <!-- SCRIPT PRINCIPAL CON LÓGICA Y GRÁFICOS -->
     <script>
+        // GLOBALES Y ESTADO
+        let chartCausales = null;
+        let chartCostos = null;
+        let historialTurnos = JSON.parse(localStorage.getItem('GF_HISTORIAL_EMBOLSADO') || '[]');
+
+        // VALIDACIÓN DE ACCESO
         function validarAcceso(e) {
             e.preventDefault();
             const u = document.getElementById('usr-login').value.trim();
@@ -172,106 +402,298 @@
             if (u === "eichpredyasociados@gmail.com" && p === "Joaquin#7") {
                 document.getElementById('sec-login').classList.add('hidden');
                 document.getElementById('sec-dashboard').classList.remove('hidden');
+                inicializarGraficos();
                 recalcular();
+                renderHistorial();
             } else {
                 document.getElementById('msg-error').classList.remove('hidden');
             }
         }
 
-        function actualizarEmpaque() {
-            const kg = Number(document.getElementById('cfg-tipo-empaque').value);
-            const inputVel = document.getElementById('cfg-velocidad-hs');
-            
-            // Ajuste automático de velocidad promedio según empaque
-            if (kg === 25) inputVel.value = 400;
-            else if (kg === 50) inputVel.value = 250;
-            else if (kg === 1000) inputVel.value = 15;
-        }
-
+        // CÁLCULO PRINCIPAL
         function recalcular() {
-            // 1. Obtener Variables Operativas
-            const kgEmpaque = Number(document.getElementById('cfg-tipo-empaque').value) || 25;
-            const unidadesHs = Number(document.getElementById('cfg-velocidad-hs').value) || 0;
-            
-            const tnPorHora = (unidadesHs * kgEmpaque) / 1000;
-            document.getElementById('lbl-capacidad-tn-hs').innerText = tnPorHora.toFixed(2) + ' tn/hs';
+            // 1. Lectura de Parámetros de Configuración
+            const capBigBagTn = parseFloat(document.getElementById('cfg-capacidad-bb').value) || 1.25;
+            const bolsasPerBB = capBigBagTn / 0.025;
+            document.getElementById('lbl-bolsas-per-bb').innerText = Math.round(bolsasPerBB) + " bolsas";
 
-            // 2. Componentes de Costo
-            const costoBolsaUn = Number(document.getElementById('v-costo-bolsa').value) || 0;
-            const mermaPct = Number(document.getElementById('v-merma-pct').value) || 0;
-            const insumosVariariosHs = Number(document.getElementById('v-insumos-hs').value) || 0;
-            const moHs = Number(document.getElementById('v-mo-hs').value) || 0;
-            
-            const kwPrecio = Number(document.getElementById('v-kw-precio').value) || 0;
-            const kwConsumo = Number(document.getElementById('v-kw-consumo').value) || 0;
-            const energiaHs = kwPrecio * kwConsumo;
+            const velOptimaBolsasHs = parseFloat(document.getElementById('cfg-vel-optima').value) || 400;
+            const tnOptimaHs = velOptimaBolsasHs * 0.025;
+            document.getElementById('lbl-tn-optima-hs').innerText = tnOptimaHs.toFixed(2) + " Tn/hs";
 
-            const maintHs = Number(document.getElementById('v-maint-hs').value) || 0;
+            // 2. Lectura de Carga de Turno
+            const bolsasProducidas = parseFloat(document.getElementById('inp-bolsas-prod').value) || 0;
+            const tnProducidas = bolsasProducidas * 0.025;
+            const bigBagsEquivalentes = capBigBagTn > 0 ? (tnProducidas / capBigBagTn) : 0;
 
-            // Costo Envase total por hora incluyendo merma
-            const costoEnvasesHs = (unidadesHs * costoBolsaUn) * (1 + (mermaPct / 100));
+            const tiempoRealHs = parseFloat(document.getElementById('inp-tiempo-real-hs').value) || 0.001;
+            const tiempoTeoricoHs = velOptimaBolsasHs > 0 ? (bolsasProducidas / velOptimaBolsasHs) : 0;
+            document.getElementById('lbl-tiempo-teorico-hs').innerText = tiempoTeoricoHs.toFixed(2) + " hs";
 
-            // 3. Agrupación de Conjuntos ($/Hora y $/Tonelada)
-            const rubros = [
-                { concepto: 'Insumo Envase Directo (con merma)', costoHs: costoEnvasesHs },
-                { concepto: 'Insumos Embalaje (Pallet, Stretch, Hilo)', costoHs: insumosVariariosHs },
-                { concepto: 'Mano de Obra Directa del Sector', costoHs: moHs },
-                { concepto: 'Consumo Energía Eléctrica', costoHs: energiaHs },
-                { concepto: 'Mantenimiento Mecánico y Repuestos', costoHs: maintHs }
+            // 3. Causales de Parada y Desvíos
+            const cArena = parseFloat(document.getElementById('causa-arena').value) || 0;
+            const cMecanica = parseFloat(document.getElementById('causa-mecanica').value) || 0;
+            const cInsumos = parseFloat(document.getElementById('causa-insumos').value) || 0;
+            const cLogistica = parseFloat(document.getElementById('causa-logistica').value) || 0;
+
+            const totalParadasHs = cArena + cMecanica + cInsumos + cLogistica;
+            document.getElementById('lbl-total-paradas').innerText = totalParadasHs.toFixed(2) + " hs";
+
+            const desvioHs = tiempoRealHs - tiempoTeoricoHs;
+            const desvioPct = tiempoTeoricoHs > 0 ? ((desvioHs / tiempoTeoricoHs) * 100) : 0;
+
+            document.getElementById('kpi-desvio-hs').innerText = desvioHs.toFixed(2) + " hs";
+            document.getElementById('kpi-desvio-pct').innerText = (desvioPct >= 0 ? "+" : "") + desvioPct.toFixed(1) + "% vs Óptimo";
+
+            // 4. Eficiencia / OEE / Alertas por Colores
+            const oee = tiempoRealHs > 0 ? Math.min(100, (tiempoTeoricoHs / tiempoRealHs) * 100) : 0;
+            document.getElementById('kpi-oee').innerText = oee.toFixed(1) + "%";
+
+            const cardOee = document.getElementById('card-oee');
+            const badgeOee = document.getElementById('badge-oee');
+            const badgeStatus = document.getElementById('badge-status-general');
+
+            if (oee >= 85) {
+                cardOee.className = "bg-slate-950 px-4 py-2.5 rounded-xl border border-emerald-500/30 text-right";
+                badgeOee.className = "text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold";
+                badgeOee.innerText = "ÓPTIMO";
+                badgeStatus.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badgeStatus.innerHTML = '<i class="fa-solid fa-circle text-[8px] mr-1"></i> OPERACIÓN NORMAL';
+            } else if (oee >= 70) {
+                cardOee.className = "bg-slate-950 px-4 py-2.5 rounded-xl border border-amber-500/40 text-right";
+                badgeOee.className = "text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-semibold";
+                badgeOee.innerText = "ALERTA / DESVÍO";
+                badgeStatus.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                badgeStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-[8px] mr-1"></i> DESVÍO MODERADO';
+            } else {
+                cardOee.className = "bg-slate-950 px-4 py-2.5 rounded-xl border border-red-500/50 text-right animate-pulse";
+                badgeOee.className = "text-[9px] px-1.5 py-0.2 rounded bg-red-500/20 text-red-400 font-bold";
+                badgeOee.innerText = "CRÍTICO";
+                badgeStatus.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+                badgeStatus.innerHTML = '<i class="fa-solid fa-bell text-[8px] mr-1"></i> INEFICIENCIA CRÍTICA';
+            }
+
+            // 5. CÁLCULO ESTRUCTURADO DE COSTOS (DIRECTOS E INDIRECTOS)
+            const cBolsa25 = parseFloat(document.getElementById('costo-bolsa-25').value) || 0;
+            const cBigBag = parseFloat(document.getElementById('costo-bigbag-un').value) || 0;
+            const cStretchHs = parseFloat(document.getElementById('costo-stretch-hs').value) || 0;
+            const cMoHs = parseFloat(document.getElementById('costo-mo-hs').value) || 0;
+            const cEnergiaHs = parseFloat(document.getElementById('costo-energia-hs').value) || 0;
+            const cMaintHs = parseFloat(document.getElementById('costo-maint-hs').value) || 0;
+            const cIndirectosHs = parseFloat(document.getElementById('costo-indirectos-hs').value) || 0;
+            const mermaPct = parseFloat(document.getElementById('costo-merma-pct').value) || 0;
+
+            // Costo total de envases por hora real
+            const bolsasPorHsReal = bolsasProducidas / tiempoRealHs;
+            const bigBagsPorHsReal = bigBagsEquivalentes / tiempoRealHs;
+
+            const costoInsumosEnvaseHs = ((bolsasPorHsReal * cBolsa25) + (bigBagsPorHsReal * cBigBag)) * (1 + (mermaPct/100));
+
+            const costoTotalHoraReal = costoInsumosEnvaseHs + cStretchHs + cMoHs + cEnergiaHs + cMaintHs + cIndirectosHs;
+            const rendRealTnHs = tiempoRealHs > 0 ? (tnProducidas / tiempoRealHs) : 0;
+            const costoSeparableTnReal = rendRealTnHs > 0 ? (costoTotalHoraReal / rendRealTnHs) : 0;
+
+            // Sobrecosto por horas perdidas
+            const costoPorHoraOp = cMoHs + cEnergiaHs + cMaintHs + cIndirectosHs;
+            const sobrecostoParadas = totalParadasHs * costoPorHoraOp;
+
+            // Displays
+            document.getElementById('kpi-costo-hora').innerText = "$ " + costoTotalHoraReal.toLocaleString('es-AR', {minimumFractionDigits: 2}) + " / hs";
+            document.getElementById('kpi-costo-tn').innerText = "$ " + costoSeparableTnReal.toLocaleString('es-AR', {minimumFractionDigits: 2}) + " / tn";
+            document.getElementById('disp-tn-real').innerText = tnProducidas.toFixed(2) + " Tn";
+            document.getElementById('disp-bb-real').innerText = Math.round(bigBagsEquivalentes) + " Big Bags (" + capBigBagTn + "t)";
+            document.getElementById('disp-rend-real').innerText = rendRealTnHs.toFixed(2) + " Tn/hs";
+            document.getElementById('disp-sobrecosto').innerText = "$ " + sobrecostoParadas.toLocaleString('es-AR', {minimumFractionDigits: 2});
+
+            // Guardar global para Sync VNR
+            window.costoSeparableFinalTn = costoSeparableTnReal;
+
+            // 6. RENDER DE TABLA DE DESGLOSE
+            const desglose = [
+                { concepto: 'Bolsas 25kg + Big Bags (con merma)', hs: costoInsumosEnvaseHs },
+                { concepto: 'Insumos Palletizado & Stretch', hs: cStretchHs },
+                { concepto: 'Mano de Obra Directa (Dotación/Turno)', hs: cMoHs },
+                { concepto: 'Energía Eléctrica Operativa', hs: cEnergiaHs },
+                { concepto: 'Mantenimiento & Desgaste Mecánico', hs: cMaintHs },
+                { concepto: 'Indirectos, Supervisión & Amortización', hs: cIndirectosHs }
             ];
 
-            let totalCostoHora = 0;
-            let html = `
-            <table class="w-full text-left border-collapse min-w-[650px]">
-                <thead>
-                    <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase bg-slate-950">
-                        <th class="p-3">Vertical de Costo</th>
-                        <th class="p-3 text-right text-amber-400">Costo ($ / Hora)</th>
-                        <th class="p-3 text-right text-emerald-400">Impacto ($ / Tonelada)</th>
-                        <th class="p-3 text-right">% Participación</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800 text-xs">`;
+            let htmlTbl = '';
+            desglose.forEach(item => {
+                const itemTn = rendRealTnHs > 0 ? (item.hs / rendRealTnHs) : 0;
+                const pct = costoTotalHoraReal > 0 ? ((item.hs / costoTotalHoraReal) * 100) : 0;
 
-            rubros.forEach(r => totalCostoHora += r.costoHs);
-            const totalCostoTn = tnPorHora > 0 ? (totalCostoHora / tnPorHora) : 0;
-
-            rubros.forEach(r => {
-                const impactoTn = tnPorHora > 0 ? (r.costoHs / tnPorHora) : 0;
-                const participacion = totalCostoHora > 0 ? ((r.costoHs / totalCostoHora) * 100) : 0;
-
-                html += `
+                htmlTbl += `
                 <tr class="hover:bg-slate-800/40">
-                    <td class="p-3 font-semibold text-white">${r.concepto}</td>
-                    <td class="p-3 text-right font-bold text-amber-400">$ ${r.costoHs.toLocaleString('es-AR', {minimumFractionDigits: 2})} / hs</td>
-                    <td class="p-3 text-right font-bold text-emerald-400">$ ${impactoTn.toLocaleString('es-AR', {minimumFractionDigits: 2})} / tn</td>
-                    <td class="p-3 text-right text-slate-400">${participacion.toFixed(1)} %</td>
+                    <td class="p-2.5 font-semibold text-white">${item.concepto}</td>
+                    <td class="p-2.5 text-right font-mono text-slate-300">$ ${item.hs.toFixed(2)}</td>
+                    <td class="p-2.5 text-right font-mono font-bold text-amber-400">$ ${itemTn.toFixed(2)}</td>
+                    <td class="p-2.5 text-right font-mono text-slate-400">${pct.toFixed(1)}%</td>
                 </tr>`;
             });
+            document.getElementById('tbl-desglose-body').innerHTML = htmlTbl;
 
-            html += `
-                <tr class="bg-slate-950 font-extrabold text-sm border-t-2 border-slate-700">
-                    <td class="p-3 text-white uppercase">TOTAL COSTO SEPARABLE EMBOLSADO</td>
-                    <td class="p-3 text-right text-amber-400">$ ${totalCostoHora.toLocaleString('es-AR', {minimumFractionDigits: 2})} / hs</td>
-                    <td class="p-3 text-right text-emerald-400">$ ${totalCostoTn.toLocaleString('es-AR', {minimumFractionDigits: 2})} / tn</td>
-                    <td class="p-3 text-right text-white">100,0 %</td>
-                </tr>
-            </tbody></table>`;
-
-            document.getElementById('tabla-desglose').innerHTML = html;
-            document.getElementById('kpi-costo-hora').innerText = '$ ' + totalCostoHora.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' / hs';
-            document.getElementById('kpi-costo-tn').innerText = '$ ' + totalCostoTn.toLocaleString('es-AR', {minimumFractionDigits: 2}) + ' / tn';
-
-            window.costoSeparableFinalTn = totalCostoTn;
+            // 7. ACTUALIZACIÓN DE GRÁFICOS
+            actualizarGraficos(cArena, cMecanica, cInsumos, cLogistica, desglose, rendRealTnHs);
         }
 
-        function guardarYExportar() {
+        // INICIALIZACIÓN Y ACTUALIZACIÓN DE CHART.JS
+        function inicializarGraficos() {
+            const ctx1 = document.getElementById('chart-causales').getContext('2d');
+            chartCausales = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Falta Arena', 'Falla Mecánica', 'Falta Insumos', 'Atasco/Logística'],
+                    datasets: [{
+                        data: [0.75, 0.5, 0.25, 0.5],
+                        backgroundColor: ['#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('chart-costos').getContext('2d');
+            chartCostos = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Envases', 'Pallet', 'MO', 'Energía', 'Maint.', 'Indir.'],
+                    datasets: [{
+                        label: '$/Tn Real',
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        function actualizarGraficos(cArena, cMecanica, cInsumos, cLogistica, desglose, rendTnHs) {
+            if (!chartCausales || !chartCostos) return;
+
+            chartCausales.data.datasets[0].data = [cArena, cMecanica, cInsumos, cLogistica];
+            chartCausales.update();
+
+            const datosTn = desglose.map(d => rendTnHs > 0 ? (d.hs / rendTnHs) : 0);
+            chartCostos.data.datasets[0].data = datosTn;
+            chartCostos.update();
+        }
+
+        // HISTORIAL Y PERSISTENCIA EN EL NAVEGADOR (LOCALSTORAGE)
+        function guardarEnHistorial() {
+            const turnoId = document.getElementById('inp-turno-id').value || "Turno Sin Nombre";
+            const bolsas = parseFloat(document.getElementById('inp-bolsas-prod').value) || 0;
+            const tn = bolsas * 0.025;
+            const hsReal = parseFloat(document.getElementById('inp-tiempo-real-hs').value) || 0;
+            const paradas = parseFloat(document.getElementById('lbl-total-paradas').innerText) || 0;
+            const costoTn = window.costoSeparableFinalTn || 0;
+            const oee = parseFloat(document.getElementById('kpi-oee').innerText) || 0;
+
+            const registro = {
+                id: Date.now(),
+                fecha: new Date().toLocaleString('es-AR'),
+                turno: turnoId,
+                bolsas: bolsas,
+                tn: tn,
+                hsReal: hsReal,
+                paradas: paradas,
+                costoTn: costoTn,
+                oee: oee
+            };
+
+            historialTurnos.unshift(registro);
+            localStorage.setItem('GF_HISTORIAL_EMBOLSADO', JSON.stringify(historialTurnos));
+            renderHistorial();
+            alert('✅ Registro guardado en el historial persistente del sitio.');
+        }
+
+        function eliminarHistorial(id) {
+            if (confirm('¿Desea eliminar este registro del historial?')) {
+                historialTurnos = historialTurnos.filter(item => item.id !== id);
+                localStorage.setItem('GF_HISTORIAL_EMBOLSADO', JSON.stringify(historialTurnos));
+                renderHistorial();
+            }
+        }
+
+        function renderHistorial() {
+            let html = '';
+            if (historialTurnos.length === 0) {
+                html = `<tr><td colspan="9" class="p-4 text-center text-slate-500 italic">No hay turnos registrados en el historial aún.</td></tr>`;
+            } else {
+                historialTurnos.forEach(item => {
+                    html += `
+                    <tr class="hover:bg-slate-800/50">
+                        <td class="p-2 text-slate-400">${item.fecha}</td>
+                        <td class="p-2 font-bold text-white">${item.turno}</td>
+                        <td class="p-2 text-right">${item.bolsas}</td>
+                        <td class="p-2 text-right">${item.tn.toFixed(2)}</td>
+                        <td class="p-2 text-right">${item.hsReal.toFixed(1)} hs</td>
+                        <td class="p-2 text-right text-amber-400">${item.paradas.toFixed(2)} hs</td>
+                        <td class="p-2 text-right font-bold text-emerald-400">$ ${item.costoTn.toFixed(2)}</td>
+                        <td class="p-2 text-center font-bold ${item.oee >= 85 ? 'text-emerald-400' : 'text-amber-400'}">${item.oee.toFixed(1)}%</td>
+                        <td class="p-2 text-center">
+                            <button onclick="eliminarHistorial(${item.id})" class="text-red-400 hover:text-red-300 transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('tbl-historial-body').innerHTML = html;
+        }
+
+        // EXPORTACIÓN A EXCEL (.XLSX) CON SHEETJS
+        function exportarExcelProfesional() {
+            if (historialTurnos.length === 0) {
+                alert('No hay datos registrados en el historial para exportar.');
+                return;
+            }
+
+            const dataExcel = historialTurnos.map(item => ({
+                "Fecha / Hora": item.fecha,
+                "Identificador de Turno": item.turno,
+                "Bolsas 25kg Producidas": item.bolsas,
+                "Toneladas Totales": item.tn,
+                "Horas Reales Operadas": item.hsReal,
+                "Horas de Parada Registradas": item.paradas,
+                "OEE Sector (%)": item.oee,
+                "Costo Separable ($/Tn)": item.costoTn
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataExcel);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Historial_Embolsado");
+
+            // Generar archivo .XLSX
+            XLSX.writeFile(workbook, "GRAVAFILT_Monitoreo_Embolsado_" + new Date().toISOString().slice(0,10) + ".xlsx");
+        }
+
+        // EXPORTACIÓN Y CIFRADO PARA LA MATRIZ VNR
+        function exportarAMatrizVNR() {
             const claveSecreta = "GRAVAFILT_SECURE_KEY_2026";
-            const payload = JSON.stringify({ costoTn: window.costoSeparableFinalTn || 0, fecha: new Date() });
-            const cifrado = CryptoJS.AES.encrypt(payload, claveSecreta).toString();
+            const payload = JSON.stringify({ 
+                costoTn: window.costoSeparableFinalTn || 0, 
+                oee: parseFloat(document.getElementById('kpi-oee').innerText) || 0,
+                fecha: new Date() 
+            });
             
+            const cifrado = CryptoJS.AES.encrypt(payload, claveSecreta).toString();
             localStorage.setItem('GF_EMBOLSADO_DATA', cifrado);
-            alert('Parámetros parametrizados y exportados con éxito. Costo separable resultante: $' + (window.costoSeparableFinalTn || 0).toFixed(2) + ' / tn');
+            alert('🚀 Parámetros y costo separable ($' + (window.costoSeparableFinalTn || 0).toFixed(2) + '/Tn) exportados y cifrados con éxito para la Matriz VNR Principal.');
         }
     </script>
 </body>
