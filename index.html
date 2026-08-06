@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GRAVAFILT S.A. - Tablero de Control Operativo y Costos</title>
-  <!-- Chart.js para visualización gráfica -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -24,12 +23,11 @@
     body { background-color: var(--bg-dark); color: var(--text-main); padding: 20px; font-size: 13px; line-height: 1.4; }
     .container { max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 
-    /* Header */
+    /* Header & General Layout */
     header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 8px; border: 1px solid var(--border-color); }
     header h1 { font-size: 1.4rem; color: #fff; }
     header p { color: var(--text-muted); font-size: 0.85rem; }
 
-    /* Cards & Layout */
     .section-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
     .section-title { font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
@@ -40,41 +38,31 @@
     .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
     .kpi-value { font-size: 1.4rem; font-weight: bold; margin-top: 5px; color: #fff; }
 
-    /* Tablas y Formularios */
+    /* Tables & Forms */
     .form-group { display: flex; flex-direction: column; gap: 5px; }
     label { font-size: 0.8rem; color: var(--text-muted); }
-    input, select, textarea { background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 0.85rem; outline: none; }
+    input, select { background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 0.85rem; outline: none; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
     th, td { border: 1px solid var(--border-color); padding: 8px 10px; text-align: left; }
     th { background: rgba(0,0,0,0.3); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
 
-    /* Botones */
+    /* Buttons */
     .btn { background: var(--accent-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
     .btn:hover { opacity: 0.9; }
     .btn-success { background: var(--accent-green); }
     .btn-danger { background: var(--accent-red); }
     .btn-warning { background: var(--accent-yellow); color: #000; }
+    .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
 
-    /* Modales */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(15, 23, 42, 0.9); display: none; justify-content: center; align-items: center; z-index: 9999;
-    }
-    .modal-card {
-      background: var(--card-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px;
-      width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    .modal-admin-panel {
-      background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; width: 95%; max-width: 1400px;
-      max-height: 90vh; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px;
-    }
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.9); display: none; justify-content: center; align-items: center; z-index: 9999; }
+    .modal-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+    .modal-admin-panel { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; width: 95%; max-width: 1400px; max-height: 90vh; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
 
-    /* Alertas visuales por color */
+    /* Status Highlights */
     .alert-danger { background-color: rgba(239, 68, 68, 0.15); border-left: 4px solid var(--accent-red); }
     .alert-warning { background-color: rgba(245, 158, 11, 0.15); border-left: 4px solid var(--accent-yellow); }
-    .alert-success { background-color: rgba(16, 185, 129, 0.15); border-left: 4px solid var(--accent-green); }
-
     .deviation-positive { color: var(--accent-red); font-weight: bold; }
     .deviation-negative { color: var(--accent-green); font-weight: bold; }
   </style>
@@ -82,20 +70,19 @@
 <body>
 
   <div class="container">
-
-    <!-- HEADER EJECUTIVO -->
+    <!-- HEADER -->
     <header>
       <div>
         <h1>GRAVAFILT S.A. - Control Operativo y Costos de Planta</h1>
         <p>Sistema Integrado de Eficiencia, Empaque y Análisis de Ineficiencias</p>
       </div>
       <div style="display: flex; gap: 10px;">
-        <button class="btn btn-warning" onclick="openLoginModal()">🔒 Acceso ADMIN</button>
+        <button class="btn btn-warning" onclick="toggleModal('loginModal', true)">🔒 Acceso ADMIN</button>
         <button class="btn btn-success" onclick="exportDataJSON()">📤 Exportar JSON</button>
       </div>
     </header>
 
-    <!-- KPIS GENERALES DE PLANTA -->
+    <!-- KPIS -->
     <section class="grid-4">
       <div class="kpi-card">
         <div class="kpi-title">Tn Objetivo Jornada</div>
@@ -115,7 +102,7 @@
       </div>
     </section>
 
-    <!-- GRÁFICOS PRINCIPALES DE INDEX -->
+    <!-- CHARTS -->
     <div class="grid-2">
       <section class="section-card">
         <div class="section-title">Análisis Gráfico de Tiempos (Esperado vs. Real)</div>
@@ -123,7 +110,6 @@
           <canvas id="indexChartTiempos"></canvas>
         </div>
       </section>
-
       <section class="section-card">
         <div class="section-title">Distribución Económica de Paradas e Ineficiencias</div>
         <div style="height: 320px; position: relative;">
@@ -132,7 +118,7 @@
       </section>
     </div>
 
-    <!-- TABLA DE CONTROL Y VARIABLES DE PLANTA (TU LISTA COMPLETA) -->
+    <!-- MAIN VARIABLES TABLE -->
     <section class="section-card">
       <div class="section-title">Matriz de Control Cuantitativo de Planta</div>
       <table>
@@ -143,15 +129,12 @@
             <th>Estado / Diagnóstico de Impacto</th>
           </tr>
         </thead>
-        <tbody id="indexTbodyVariables">
-          <!-- Carga dinámicamente -->
-        </tbody>
+        <tbody id="indexTbodyVariables"></tbody>
       </table>
     </section>
-
   </div>
 
-  <!-- MODAL DE LOGIN ADMIN -->
+  <!-- LOGIN MODAL -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal-card">
       <h2 style="color: var(--accent-blue); text-align: center;">Acceso Administrador</h2>
@@ -166,16 +149,15 @@
       </div>
       <p id="loginError" style="color: var(--accent-red); display: none;">Credenciales incorrectas</p>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button class="btn btn-danger" onclick="closeLoginModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="toggleModal('loginModal', false)">Cancelar</button>
         <button class="btn btn-success" onclick="authenticateAdmin()">Ingresar</button>
       </div>
     </div>
   </div>
 
-  <!-- PANEL ADMIN DESPLEGABLE -->
+  <!-- ADMIN PANEL MODAL -->
   <div class="modal-overlay" id="adminPanelModal">
     <div class="modal-admin-panel">
-      
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
         <div>
           <h2 style="color: var(--accent-yellow);">Panel de Configuración y Métricas (ADMIN)</h2>
@@ -183,11 +165,11 @@
         </div>
         <div style="display: flex; gap: 10px;">
           <button class="btn btn-success" onclick="saveAdminChanges()">💾 Guardar y Sincronizar INDEX</button>
-          <button class="btn btn-danger" onclick="closeAdminPanel()">✕ Cerrar Panel</button>
+          <button class="btn btn-danger" onclick="toggleModal('adminPanelModal', false)">✕ Cerrar Panel</button>
         </div>
       </div>
 
-      <!-- SECCIÓN ADMIN 1: FINANCIEROS -->
+      <!-- ADMIN FINANCIALS -->
       <section class="section-card">
         <div class="section-title">1. Parámetros Financieros Base</div>
         <div class="grid-4">
@@ -205,12 +187,12 @@
           </div>
           <div class="form-group">
             <label>Costo Ineficiencia ($/Min)</label>
-            <input type="text" id="costPerMin" value="$ 0,00" readonly style="background: rgba(0,0,0,0.3); font-weight: bold; color: var(--accent-yellow);">
+            <input type="text" id="costPerMin" readonly style="background: rgba(0,0,0,0.3); font-weight: bold; color: var(--accent-yellow);">
           </div>
         </div>
       </section>
 
-      <!-- SECCIÓN ADMIN 2: MATRIZ DE TIEMPOS -->
+      <!-- ADMIN MATRIX -->
       <section class="section-card">
         <div class="section-title">
           <span>2. Matriz de Tiempos Esperados vs. Reales por Tarea</span>
@@ -228,46 +210,38 @@
               <th style="width: 40px;"></th>
             </tr>
           </thead>
-          <tbody id="adminTasksTbody">
-            <!-- Carga dinámica -->
-          </tbody>
+          <tbody id="adminTasksTbody"></tbody>
         </table>
       </section>
 
-      <!-- SECCIÓN ADMIN 3: VARIABLES DE CAMPO -->
+      <!-- ADMIN VARIABLES -->
       <section class="section-card">
         <div class="section-title">3. Variables Cuantitativas de Control de Planta</div>
-        <div class="grid-4">
-          <div class="form-group"><label>Tn Objetivo</label><input type="number" id="v_tn_objetivo" value="500"></div>
-          <div class="form-group"><label>Cant. Granulometrías</label><input type="number" id="v_cant_granulometrias" value="6"></div>
-          <div class="form-group"><label>Resto Material en Tolva Final (Tn)</label><input type="number" id="v_resto_tolva" value="12"></div>
-          <div class="form-group"><label>Paradas Cambio Material / Limpieza Tolva</label><input type="number" id="v_paradas_limpieza" value="3"></div>
-
-          <div class="form-group"><label>Paradas Falta de Comunicación</label><input type="number" id="v_paradas_comunicacion" value="2"></div>
-          <div class="form-group"><label>Paradas Falta Materia en Tolva</label><input type="number" id="v_paradas_falta_materia" value="4"></div>
-          <div class="form-group"><label>Paradas Retiro Personal (Descanso/Baño)</label><input type="number" id="v_paradas_retiro_personal" value="5"></div>
-          <div class="form-group"><label>Paradas Falta de Bolsas</label><input type="number" id="v_paradas_falta_bolsas" value="1"></div>
-
-          <div class="form-group"><label>Paradas Apertura Portabolsas</label><input type="number" id="v_paradas_apertura_portabolsas" value="2"></div>
-          <div class="form-group"><label>Paradas Falta de Portabolsas</label><input type="number" id="v_paradas_falta_portabolsas" value="0"></div>
-          <div class="form-group"><label>Llamadas Atención Celulares</label><input type="number" id="v_llamadas_atencion_celular" value="4"></div>
-          <div class="form-group"><label>Rotaciones Intrajornada</label><input type="number" id="v_rotaciones_intrajornada" value="3"></div>
-
-          <div class="form-group"><label>Incidencia Correctivo (Hs)</label><input type="number" step="0.1" id="v_incidencia_correctivo" value="2.5"></div>
-          <div class="form-group"><label>Incidencia Preventivo (Hs)</label><input type="number" step="0.1" id="v_incidencia_preventivo" value="1.0"></div>
-          <div class="form-group"><label>Cantidad Riesgos / Tiempos Muertos</label><input type="number" id="v_tiempos_muertos_riesgo" value="6"></div>
+        <div class="grid-4" id="adminMetricsGrid">
+          <div class="form-group"><label>Tn Objetivo</label><input type="number" id="v_tn_objetivo"></div>
+          <div class="form-group"><label>Cant. Granulometrías</label><input type="number" id="v_cant_granulometrias"></div>
+          <div class="form-group"><label>Resto Material en Tolva Final (Tn)</label><input type="number" id="v_resto_tolva"></div>
+          <div class="form-group"><label>Paradas Cambio Material / Limpieza Tolva</label><input type="number" id="v_paradas_limpieza"></div>
+          <div class="form-group"><label>Paradas Falta de Comunicación</label><input type="number" id="v_paradas_comunicacion"></div>
+          <div class="form-group"><label>Paradas Falta Materia en Tolva</label><input type="number" id="v_paradas_falta_materia"></div>
+          <div class="form-group"><label>Paradas Retiro Personal (Descanso/Baño)</label><input type="number" id="v_paradas_retiro_personal"></div>
+          <div class="form-group"><label>Paradas Falta de Bolsas</label><input type="number" id="v_paradas_falta_bolsas"></div>
+          <div class="form-group"><label>Paradas Apertura Portabolsas</label><input type="number" id="v_paradas_apertura_portabolsas"></div>
+          <div class="form-group"><label>Paradas Falta de Portabolsas</label><input type="number" id="v_paradas_falta_portabolsas"></div>
+          <div class="form-group"><label>Llamadas Atención Celulares</label><input type="number" id="v_llamadas_atencion_celular"></div>
+          <div class="form-group"><label>Rotaciones Intrajornada</label><input type="number" id="v_rotaciones_intrajornada"></div>
+          <div class="form-group"><label>Incidencia Correctivo (Hs)</label><input type="number" step="0.1" id="v_incidencia_correctivo"></div>
+          <div class="form-group"><label>Incidencia Preventivo (Hs)</label><input type="number" step="0.1" id="v_incidencia_preventivo"></div>
+          <div class="form-group"><label>Cantidad Riesgos / Tiempos Muertos</label><input type="number" id="v_tiempos_muertos_riesgo"></div>
         </div>
       </section>
-
     </div>
   </div>
 
   <script>
-    // CREDENCIALES SOLICITADAS
     const ADMIN_USER = "gravafilt";
     const ADMIN_PASS = "gravafilt2026";
 
-    // ESTADO BASE DEL SISTEMA
     let appState = {
       baseHourlyCost: 85000,
       opCount: 12,
@@ -280,26 +254,15 @@
         { name: "Resolución de Falta de Comunicación", expectedMin: 5, realMin: 15, freq: 2 }
       ],
       metrics: {
-        v_tn_objetivo: 500,
-        v_cant_granulometrias: 6,
-        v_resto_tolva: 12,
-        v_paradas_limpieza: 3,
-        v_paradas_comunicacion: 2,
-        v_paradas_falta_materia: 4,
-        v_paradas_retiro_personal: 5,
-        v_paradas_falta_bolsas: 1,
-        v_paradas_apertura_portabolsas: 2,
-        v_paradas_falta_portabolsas: 0,
-        v_llamadas_atencion_celular: 4,
-        v_rotaciones_intrajornada: 3,
-        v_incidencia_correctivo: 2.5,
-        v_incidencia_preventivo: 1.0,
-        v_tiempos_muertos_riesgo: 6
+        v_tn_objetivo: 500, v_cant_granulometrias: 6, v_resto_tolva: 12, v_paradas_limpieza: 3,
+        v_paradas_comunicacion: 2, v_paradas_falta_materia: 4, v_paradas_retiro_personal: 5,
+        v_paradas_falta_bolsas: 1, v_paradas_apertura_portabolsas: 2, v_paradas_falta_portabolsas: 0,
+        v_llamadas_atencion_celular: 4, v_rotaciones_intrajornada: 3, v_incidencia_correctivo: 2.5,
+        v_incidencia_preventivo: 1.0, v_tiempos_muertos_riesgo: 6
       }
     };
 
-    let chartTiemposInstance = null;
-    let chartCostosInstance = null;
+    let charts = { tiempos: null, costos: null };
 
     document.addEventListener("DOMContentLoaded", () => {
       loadState();
@@ -308,37 +271,31 @@
 
     function loadState() {
       const saved = localStorage.getItem("GRAVAFILT_APP_STATE");
-      if (saved) {
-        appState = JSON.parse(saved);
-      }
+      if (saved) appState = JSON.parse(saved);
     }
 
     function saveState() {
       localStorage.setItem("GRAVAFILT_APP_STATE", JSON.stringify(appState));
     }
 
-    // AUTENTICACIÓN ADMIN
-    function openLoginModal() { document.getElementById("loginModal").style.display = "flex"; }
-    function closeLoginModal() {
-      document.getElementById("loginModal").style.display = "none";
-      document.getElementById("loginError").style.display = "none";
+    function toggleModal(id, show) {
+      document.getElementById(id).style.display = show ? "flex" : "none";
+      if (id === 'loginModal' && !show) document.getElementById("loginError").style.display = "none";
     }
 
     function authenticateAdmin() {
       const u = document.getElementById("adminUser").value;
       const p = document.getElementById("adminPass").value;
-
       if (u === ADMIN_USER && p === ADMIN_PASS) {
-        closeLoginModal();
+        toggleModal("loginModal", false);
         openAdminPanel();
       } else {
         document.getElementById("loginError").style.display = "block";
       }
     }
 
-    // LÓGICA DEL PANEL ADMIN
     function openAdminPanel() {
-      document.getElementById("adminPanelModal").style.display = "flex";
+      toggleModal("adminPanelModal", true);
       document.getElementById("baseHourlyCost").value = appState.baseHourlyCost;
       document.getElementById("opCount").value = appState.opCount;
       document.getElementById("shiftHours").value = appState.shiftHours;
@@ -352,15 +309,10 @@
       calculateAdminDeviations();
     }
 
-    function closeAdminPanel() { document.getElementById("adminPanelModal").style.display = "none"; }
-
     function renderAdminTasks() {
       const tbody = document.getElementById("adminTasksTbody");
-      tbody.innerHTML = "";
-
-      appState.tasks.forEach((task, idx) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
+      tbody.innerHTML = appState.tasks.map((task, idx) => `
+        <tr>
           <td><input type="text" value="${task.name}" onchange="updateAdminTask(${idx}, 'name', this.value)" style="width:100%;"></td>
           <td><input type="number" value="${task.expectedMin}" onchange="updateAdminTask(${idx}, 'expectedMin', parseFloat(this.value))" style="width:100%;"></td>
           <td><input type="number" value="${task.realMin}" onchange="updateAdminTask(${idx}, 'realMin', parseFloat(this.value))" style="width:100%;"></td>
@@ -368,9 +320,8 @@
           <td id="admin-dev-min-${idx}" style="font-weight:bold;">0 Min</td>
           <td id="admin-dev-cost-${idx}" style="font-weight:bold; color:var(--accent-red);">$ 0,00</td>
           <td><button class="btn btn-sm btn-danger" onclick="removeAdminTask(${idx})">✕</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
+        </tr>
+      `).join('');
     }
 
     function updateAdminTask(idx, field, val) {
@@ -398,7 +349,6 @@
       appState.tasks.forEach((task, idx) => {
         const devMin = (task.realMin - task.expectedMin) * (task.freq || 1);
         const devCost = devMin * costPerMin;
-
         const devMinEl = document.getElementById(`admin-dev-min-${idx}`);
         const devCostEl = document.getElementById(`admin-dev-cost-${idx}`);
 
@@ -415,27 +365,20 @@
       appState.opCount = parseFloat(document.getElementById("opCount").value) || 0;
       appState.shiftHours = parseFloat(document.getElementById("shiftHours").value) || 0;
 
-      const metricInputs = document.querySelectorAll("[id^='v_']");
-      metricInputs.forEach(input => {
+      document.querySelectorAll("#adminMetricsGrid input").forEach(input => {
         appState.metrics[input.id] = parseFloat(input.value) || input.value;
       });
 
       saveState();
       renderIndexView();
-      closeAdminPanel();
-      alert("¡Sincronización Exitosa! Los tableros principales han sido actualizados.");
+      toggleModal("adminPanelModal", false);
     }
 
-    // RENDIMIENTO Y MOSTRADO DE INDEX
     function renderIndexView() {
       const costPerMin = appState.baseHourlyCost / 60;
-      let totalDevMin = 0;
-      let totalDevCost = 0;
+      let totalDevMin = 0, totalDevCost = 0;
 
-      const labels = [];
-      const expectedArr = [];
-      const realArr = [];
-      const costArr = [];
+      const labels = [], expectedArr = [], realArr = [], costArr = [];
 
       appState.tasks.forEach(task => {
         const devMin = (task.realMin - task.expectedMin) * (task.freq || 1);
@@ -450,15 +393,12 @@
         costArr.push(costImpact > 0 ? costImpact : 0);
       });
 
-      // KPIs
       document.getElementById("kpi-tn-objetivo").innerText = `${appState.metrics.v_tn_objetivo || 0} Tn`;
       document.getElementById("kpi-costo-hora").innerText = `$ ${appState.baseHourlyCost.toLocaleString('es-AR')}`;
       document.getElementById("kpi-desvio-min").innerText = `+${totalDevMin} Min`;
       document.getElementById("kpi-impacto-costo").innerText = `$ ${totalDevCost.toLocaleString('es-AR', {maximumFractionDigits:0})}`;
 
-      // Tabla de Lista Completa de Planta
-      const tbody = document.getElementById("indexTbodyVariables");
-      tbody.innerHTML = `
+      document.getElementById("indexTbodyVariables").innerHTML = `
         <tr><td>Tn Objetivo vs. Resto en Tolva</td><td><b>${appState.metrics.v_tn_objetivo} Tn / ${appState.metrics.v_resto_tolva} Tn</b></td><td>Planificación de Producción</td></tr>
         <tr><td>Cant. Granulometrías Monitoreadas</td><td><b>${appState.metrics.v_cant_granulometrias}</b></td><td>Control de Calidad</td></tr>
         <tr><td>Paradas por Falta de Materia en Tolva</td><td><b>${appState.metrics.v_paradas_falta_materia}</b></td><td class="${appState.metrics.v_paradas_falta_materia > 2 ? 'deviation-positive' : ''}">Inconsistencia en Alimentación</td></tr>
@@ -472,59 +412,32 @@
     }
 
     function renderIndexCharts(labels, expected, real, costs) {
-      const ctx1 = document.getElementById('indexChartTiempos').getContext('2d');
-      if (chartTiemposInstance) chartTiemposInstance.destroy();
+      if (charts.tiempos) charts.tiempos.destroy();
+      if (charts.costos) charts.costos.destroy();
 
-      chartTiemposInstance = new Chart(ctx1, {
+      const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#f8fafc' } } } };
+
+      charts.tiempos = new Chart(document.getElementById('indexChartTiempos'), {
         type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: 'Tiempo Esperado (Min)', data: expected, backgroundColor: '#3b82f6' },
-            { label: 'Tiempo Real (Min)', data: real, backgroundColor: '#ef4444' }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#f8fafc' } } },
-          scales: {
-            x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
-          }
-        }
+        data: { labels, datasets: [{ label: 'Esperado (Min)', data: expected, backgroundColor: '#3b82f6' }, { label: 'Real (Min)', data: real, backgroundColor: '#ef4444' }] },
+        options: { ...commonOptions, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
       });
 
-      const ctx2 = document.getElementById('indexChartCostos').getContext('2d');
-      if (chartCostosInstance) chartCostosInstance.destroy();
-
-      chartCostosInstance = new Chart(ctx2, {
+      charts.costos = new Chart(document.getElementById('indexChartCostos'), {
         type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: costs,
-            backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#6366f1']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'right', labels: { color: '#f8fafc', font: { size: 10 } } } }
-        }
+        data: { labels, datasets: [{ data: costs, backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#6366f1'] }] },
+        options: { ...commonOptions, plugins: { legend: { position: 'right', labels: { color: '#f8fafc', font: { size: 10 } } } } }
       });
     }
 
     function exportDataJSON() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
       const a = document.createElement('a');
-      a.setAttribute("href", dataStr);
-      a.setAttribute("download", `GRAVAFILT_CONTROL_PLANTA.json`);
+      a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      a.download = "GRAVAFILT_CONTROL_PLANTA.json";
       document.body.appendChild(a);
       a.click();
       a.remove();
-      }
+    }
   </script>
 </body>
 </html>
-  
