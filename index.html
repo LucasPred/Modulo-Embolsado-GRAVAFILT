@@ -1,700 +1,523 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRAVAFILT S.A. | Centro de Monitoreo & Costeo de Embolsado</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para visualización de desvíos y costos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS para exportación profesional directa a Excel (.xlsx) -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- CryptoJS para cifrado AES-256 hacia Matriz VNR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRAVAFILT S.A. - Tablero de Control de Planta y Costos</title>
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --input-bg: #334155;
+      --border-color: #475569;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); padding: 20px; font-size: 13px; line-height: 1.4; }
+    .container { max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Header */
+    header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+    header h1 { font-size: 1.4rem; color: #fff; }
+    header p { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Layout */
+    .section-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
+    .section-title { font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* KPIs */
+    .kpi-card { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
+    .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+    .kpi-value { font-size: 1.4rem; font-weight: bold; margin-top: 5px; color: #fff; }
+
+    /* Forms & Tables */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 0.8rem; color: var(--text-muted); }
+    input, select, textarea { background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 0.85rem; outline: none; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+    th, td { border: 1px solid var(--border-color); padding: 8px 10px; text-align: left; }
+    th { background: rgba(0,0,0,0.3); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
+
+    /* Buttons */
+    .btn { background: var(--accent-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+    .btn:hover { opacity: 0.9; }
+    .btn-success { background: var(--accent-green); }
+    .btn-danger { background: var(--accent-red); }
+    .btn-warning { background: var(--accent-yellow); color: #000; }
+
+    /* Modales */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.9); display: none; justify-content: center; align-items: center; z-index: 9999;
+    }
+    .modal-card {
+      background: var(--card-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px;
+      width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .modal-admin-panel {
+      background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; width: 95%; max-width: 1400px;
+      max-height: 90vh; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .deviation-positive { color: var(--accent-red); font-weight: bold; }
+    .deviation-negative { color: var(--accent-green); font-weight: bold; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between p-3 md:p-6">
+<body>
 
-    <!-- ========================================== -->
-    <!-- CAPA DE SEGURIDAD: LOGIN DIRECTIVO         -->
-    <!-- ========================================== -->
-    <div id="sec-login" class="max-w-md w-full mx-auto my-auto p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
-            <div class="text-center space-y-2">
-                <div class="inline-flex p-3 bg-amber-500/10 rounded-full text-amber-500 mb-1">
-                    <i class="fa-solid fa-industry text-2xl"></i>
-                </div>
-                <h1 class="text-2xl font-extrabold text-white tracking-tight">GRAVAFILT S.A.</h1>
-                <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Planta de Embolsado & Doble Empaque</p>
-                <p class="text-slate-400 text-xs">Monitoreo de Tiempos, Desvíos y Costeo en Tiempo Real</p>
-            </div>
-            <form onsubmit="validarAcceso(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Usuario Directivo</label>
-                    <input type="email" id="usr-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Contraseña</label>
-                    <input type="password" id="pwd-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                </div>
-                <div id="msg-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center font-medium">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciales no válidas
-                </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl transition text-sm shadow-lg shadow-amber-600/20">
-                    Ingresar al Centro de Control
-                </button>
-            </form>
-            <div class="text-center border-t border-slate-800 pt-4">
-                <p class="text-[10px] text-slate-500">Módulo Standalone | Cifrado AES-256 | LocalStorage Sync</p>
-            </div>
+  <div class="container">
+
+    <!-- HEADER GENERAL CON BOTÓN ADMIN -->
+    <header>
+      <div>
+        <h1>GRAVAFILT S.A. - Tablero de Control de Planta</h1>
+        <p>Monitoreo Ejecutivo de Producción, Tiempos Muertos e Impacto de Costos</p>
+      </div>
+      <div>
+        <button class="btn btn-warning" onclick="openLoginModal()">🔒 Acceso ADMIN</button>
+      </div>
+    </header>
+
+    <!-- INDICADORES CLAVE (KPIS GENERALES EN INDEX) -->
+    <section class="grid-4">
+      <div class="kpi-card">
+        <div class="kpi-title">Tn Objetivo Jornada</div>
+        <div class="kpi-value" id="kpi-tn-objetivo">0 Tn</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Costo Hora Base Operativo</div>
+        <div class="kpi-value" id="kpi-costo-hora">$ 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Desvío Total Tiempos Muertos</div>
+        <div class="kpi-value" style="color: var(--accent-yellow);" id="kpi-desvio-min">0 Min</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Pérdida por Ineficiencia</div>
+        <div class="kpi-value" style="color: var(--accent-red);" id="kpi-impacto-costo">$ 0</div>
+      </div>
+    </section>
+
+    <!-- TABLEROS Y GRÁFICOS PÚBLICOS DEL INDEX -->
+    <div class="grid-2">
+      <section class="section-card">
+        <div class="section-title">Análisis Grafico de Desvíos (Esperado vs. Real)</div>
+        <div style="height: 320px; position: relative;">
+          <canvas id="indexChartTiempos"></canvas>
         </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-title">Distribución Económica de Paradas e Ineficiencias</div>
+        <div style="height: 320px; position: relative;">
+          <canvas id="indexChartCostos"></canvas>
+        </div>
+      </section>
     </div>
 
-    <!-- ========================================== -->
-    <!-- DASHBOARD PRINCIPAL PROTEGIDO             -->
-    <!-- ========================================== -->
-    <div id="sec-dashboard" class="hidden max-w-[1500px] w-full mx-auto space-y-6">
-        
-        <!-- HEADER SUPERIOR CON KPIs CLAVE -->
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-2xl">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
-                    <i class="fa-solid fa-boxes-packing text-2xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
-                        GRAVAFILT S.A. 
-                        <span class="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Doble Empaque 25kg + Big Bag</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">Centro Operativo de Tiempos, Desvíos, Eficiencia OEE e Impacto Económico</p>
-                </div>
-            </div>
+    <!-- TABLA DE RESUMEN DE PARADAS Y VARIABLES CUANTITATIVAS -->
+    <section class="section-card">
+      <div class="section-title">Resumen de Paradas y Variables Cuantitativas de Control</div>
+      <table id="indexTableVariables">
+        <thead>
+          <tr>
+            <th>Métrica / Parámetro de Planta</th>
+            <th>Valor Registrado</th>
+            <th>Estado / Observación</th>
+          </tr>
+        </thead>
+        <tbody id="indexTbodyVariables">
+          <!-- Se completa dinámicamente -->
+        </tbody>
+      </table>
+    </section>
 
-            <!-- KPIs de Alarma & Eficiencia -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
-                <div id="card-oee" class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
-                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">OEE del Sector</span>
-                    <span id="kpi-oee" class="text-lg font-black text-emerald-400">100.0%</span>
-                    <span id="badge-oee" class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold">ÓPTIMO</span>
-                </div>
-                <div class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
-                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">Desvío por Ineficiencia</span>
-                    <span id="kpi-desvio-hs" class="text-lg font-black text-amber-400">0.00 hs</span>
-                    <span id="kpi-desvio-pct" class="text-[9px] text-slate-400 block">+0.0% vs Teórico</span>
-                </div>
-                <div class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
-                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">Costo / Hora Real</span>
-                    <span id="kpi-costo-hora" class="text-lg font-black text-amber-400">$ 0,00 / hs</span>
-                    <span class="text-[9px] text-slate-500 block">Incluye Paradas</span>
-                </div>
-                <div class="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-right">
-                    <span class="text-[10px] text-slate-400 uppercase font-semibold block">Costo Separable / Tn</span>
-                    <span id="kpi-costo-tn" class="text-xl font-black text-emerald-400">$ 0,00 / tn</span>
-                    <span class="text-[9px] text-emerald-500 block">Parámetro Matriz VNR</span>
-                </div>
-            </div>
+  </div>
+
+  <!-- MODAL DE LOGIN ADMIN -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-card">
+      <h2 style="color: var(--accent-blue); text-align: center;">Acceso Administrador</h2>
+      <p style="text-align: center; color: var(--text-muted);">Ingrese las credenciales del panel de control</p>
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="adminUser" placeholder="Usuario">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="adminPass" placeholder="Contraseña">
+      </div>
+      <p id="loginError" style="color: var(--accent-red); display: none;">Credenciales incorrectas</p>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-danger" onclick="closeLoginModal()">Cancelar</button>
+        <button class="btn btn-success" onclick="authenticateAdmin()">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DESPLEGABLE / MODAL ADMIN -->
+  <div class="modal-overlay" id="adminPanelModal">
+    <div class="modal-admin-panel">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+        <div>
+          <h2 style="color: var(--accent-yellow);">Panel de Configuración y Métricas (ADMIN)</h2>
+          <p style="color: var(--text-muted);">GRAVAFILT S.A. - Control Interno de Productividad y Matriz de Tiempos</p>
         </div>
-
-        <!-- PANEL DE CONTROL EN PESTAÑAS Y SECCIONES -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            <!-- COLUMNA IZQUIERDA: PARAMETRIZACIÓN & REGISTRO DE TURNOS (5 cols) -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- CONFIGURACIÓN DEL DOBLE EMPAQUE & RECURSOS -->
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-sliders"></i> 1. Recurso & Estructura Doble Empaque
-                        </h2>
-                        <span class="text-[10px] text-slate-500 font-mono">Bolsa 25kg + Portabolsa BB</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 text-xs">
-                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                            <label class="font-semibold text-slate-300 block">Capacidad Big Bag (Tn)</label>
-                            <input type="number" step="0.05" min="1.0" max="1.35" id="cfg-capacidad-bb" value="1.25" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500">
-                            <span class="text-[9px] text-slate-500 block">Rango: 1,00 a 1,35 Tn</span>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                            <label class="font-semibold text-slate-300 block">Bolsas 25kg / Big Bag</label>
-                            <div id="lbl-bolsas-per-bb" class="text-sm font-bold text-slate-200 p-1.5 font-mono">50 bolsas</div>
-                            <span class="text-[9px] text-slate-500 block">Calculado (Capacidad / 0.025)</span>
-                        </div>
-
-                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                            <label class="font-semibold text-slate-300 block">Velocidad Óptima (Bolsas/hs)</label>
-                            <input type="number" id="cfg-vel-optima" value="400" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-emerald-400 font-mono font-bold focus:outline-none focus:border-amber-500">
-                            <span class="text-[9px] text-slate-500 block">Estándar medido en planta</span>
-                        </div>
-
-                        <div class="col-span-2 sm:col-span-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                            <label class="font-semibold text-slate-300 block">Rendimiento Teórico (Tn/hs)</label>
-                            <div id="lbl-tn-optima-hs" class="text-sm font-bold text-emerald-400 p-1.5 font-mono">10,00 Tn/hs</div>
-                            <span class="text-[9px] text-slate-500 block">Capacidad máxima por hora</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARGA EN TIEMPO REAL / REGISTRO DE TURNO CON CAUSALES -->
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-stopwatch"></i> 2. Registro Operativo & Desvíos en Tiempo Real
-                        </h2>
-                        <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">Carga de Datos</span>
-                    </div>
-
-                    <div class="space-y-3 text-xs">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                                <label class="font-semibold text-slate-300 block">Turno / Identificador</label>
-                                <input type="text" id="inp-turno-id" value="Turno Mañana - Lote 01" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-sans focus:outline-none focus:border-amber-500">
-                            </div>
-                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                                <label class="font-semibold text-slate-300 block">Bolsas 25kg Producidas</label>
-                                <input type="number" id="inp-bolsas-prod" value="2400" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                                <label class="font-semibold text-slate-300 block">Tiempo Real Empleado (hs)</label>
-                                <input type="number" step="0.1" id="inp-tiempo-real-hs" value="8.0" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono font-bold focus:outline-none focus:border-amber-500">
-                            </div>
-                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                                <label class="font-semibold text-slate-300 block">Tiempo Teórico Óptimo</label>
-                                <div id="lbl-tiempo-teorico-hs" class="text-sm font-bold text-emerald-400 p-1.5 font-mono">6,00 hs</div>
-                            </div>
-                        </div>
-
-                        <!-- DESGLOSE DE DESVÍOS Y CAUSALES -->
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
-                            <span class="text-[11px] font-bold text-slate-300 block border-b border-slate-800 pb-1">
-                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Desglose de Paradas & Ineficiencias (Horas)
-                            </span>
-                            
-                            <div class="grid grid-cols-2 gap-2 text-[11px]">
-                                <div>
-                                    <label class="text-slate-400 block mb-0.5">Falta / Carga de Arena</label>
-                                    <input type="number" step="0.1" id="causa-arena" value="0.75" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
-                                </div>
-                                <div>
-                                    <label class="text-slate-400 block mb-0.5">Falla Envasadora / Cosido</label>
-                                    <input type="number" step="0.1" id="causa-mecanica" value="0.5" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
-                                </div>
-                                <div>
-                                    <label class="text-slate-400 block mb-0.5">Falta de Insumos (BB/Bolsa)</label>
-                                    <input type="number" step="0.1" id="causa-insumos" value="0.25" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
-                                </div>
-                                <div>
-                                    <label class="text-slate-400 block mb-0.5">Atasco Cintas / Palletizado</label>
-                                    <input type="number" step="0.1" id="causa-logistica" value="0.5" oninput="recalcular()" class="inp-causa w-full bg-slate-900 border border-slate-700 rounded p-1.5 font-mono text-amber-400">
-                                </div>
-                            </div>
-
-                            <div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
-                                <span class="text-slate-400 font-semibold">Total Paradas Registradas:</span>
-                                <span id="lbl-total-paradas" class="font-mono font-bold text-amber-400">2,00 hs</span>
-                            </div>
-                        </div>
-
-                        <!-- BOTÓN PARA REGISTRAR EN EL HISTORIAL -->
-                        <button onclick="guardarEnHistorial()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20">
-                            <i class="fa-solid fa-floppy-disk"></i> Registra y Guarda este Turno en Historial
-                        </button>
-                    </div>
-                </div>
-
-                <!-- MATRIZ DE ESTRUCTURA DE COSTOS DIRECTOS E INDIRECTOS -->
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-coins"></i> 3. Variables de Costos (Directos e Indirectos)
-                        </h2>
-                    </div>
-
-                    <div class="space-y-2 text-xs">
-                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Precio Bolsa 25kg ($)</label>
-                                <input type="number" step="0.01" id="costo-bolsa-25" value="0.35" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Precio Big Bag 1.25t ($)</label>
-                                <input type="number" step="0.10" id="costo-bigbag-un" value="12.50" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Stretch/Pallet ($/hs)</label>
-                                <input type="number" step="1" id="costo-stretch-hs" value="45.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Mano de Obra ($/hs)</label>
-                                <input type="number" step="1" id="costo-mo-hs" value="650.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Energía Eléctrica ($/hs)</label>
-                                <input type="number" step="1" id="costo-energia-hs" value="180.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Mantenimiento ($/hs)</label>
-                                <input type="number" step="1" id="costo-maint-hs" value="95.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Costos Indir./Deprec. ($/hs)</label>
-                                <input type="number" step="1" id="costo-indirectos-hs" value="120.00" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                            <div>
-                                <label class="text-slate-400 text-[10px] block">Merma/Rotura (%)</label>
-                                <input type="number" step="0.1" id="costo-merma-pct" value="1.5" oninput="recalcular()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 font-mono text-white">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- COLUMNA DERECHA: MONITOREO EN TIEMPO REAL & GRÁFICOS & HISTORIAL (7 cols) -->
-            <div class="lg:col-span-7 space-y-6">
-
-                <!-- MATRIZ DE DESVIOS & ALERTAS VISUALES POR COLORES -->
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-chart-line"></i> Dashboard en Tiempo Real: Ineficiencia, Ineficacia & Costos
-                        </h2>
-                        <span id="badge-status-general" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            <i class="fa-solid fa-circle text-[8px] mr-1"></i> OPERACIÓN NORMAL
-                        </span>
-                    </div>
-
-                    <!-- MATRIZ COMPARATIVA TEÓRICO vs REAL vs DESVÍO -->
-                    <div class="grid grid-cols-3 gap-3 text-center">
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] text-slate-400 block">Procesado Real</span>
-                            <span id="disp-tn-real" class="text-lg font-black text-white">60.00 Tn</span>
-                            <span id="disp-bb-real" class="text-[10px] text-amber-400 block">48 Big Bags</span>
-                        </div>
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] text-slate-400 block">Rendimiento Real</span>
-                            <span id="disp-rend-real" class="text-lg font-black text-amber-400">7.50 Tn/hs</span>
-                            <span class="text-[10px] text-slate-500 block">vs 10.00 Tn/hs Óptimo</span>
-                        </div>
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] text-slate-400 block">Sobre-costo por Paradas</span>
-                            <span id="disp-sobrecosto" class="text-lg font-black text-red-400">$ 0,00</span>
-                            <span class="text-[10px] text-red-400/80 block">Pérdida por ineficiencia</span>
-                        </div>
-                    </div>
-
-                    <!-- GRÁFICOS DE DESVIOS Y DISTRIBUCIÓN DE PARADAS -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-                            <span class="text-[11px] font-bold text-slate-300 block">Distribución de Causales de Parada</span>
-                            <div class="h-44 relative flex items-center justify-center">
-                                <canvas id="chart-causales"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-                            <span class="text-[11px] font-bold text-slate-300 block">Desglose Estructurado de Costos ($/Tn)</span>
-                            <div class="h-44 relative flex items-center justify-center">
-                                <canvas id="chart-costos"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TABLA DETALLADA DE VERTICALES DE COSTOS ($/HS Y $/TN) -->
-                    <div class="overflow-x-auto border border-slate-800 rounded-xl">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-slate-950 text-slate-400 uppercase text-[10px]">
-                                    <th class="p-2.5">Vertical / Rubro</th>
-                                    <th class="p-2.5 text-right">Costo ($/hs)</th>
-                                    <th class="p-2.5 text-right font-bold text-amber-400">Costo ($/Tn Real)</th>
-                                    <th class="p-2.5 text-right">Impacto %</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-desglose-body" class="divide-y divide-slate-800 text-slate-200">
-                                <!-- Generado dinámicamente en JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- HISTORIAL COMPLETO DE TURNOS CON ACCIONES PROFESIONALES -->
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                        <div>
-                            <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fa-solid fa-clock-rotate-left"></i> Historial Operativo de Registros Almacenados
-                            </h2>
-                            <p class="text-[10px] text-slate-400">Registros persistentes en el sitio para auditoría y exportación</p>
-                        </div>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <button onclick="exportarExcelProfesional()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20">
-                                <i class="fa-solid fa-file-excel"></i> Exportar a Excel (.xlsx)
-                            </button>
-                            <button onclick="exportarAMatrizVNR()" class="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-amber-600/20">
-                                <i class="fa-solid fa-share-nodes"></i> Sync Matriz VNR
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- TABLA HISTORIAL -->
-                    <div class="overflow-x-auto border border-slate-800 rounded-xl max-h-60 overflow-y-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead class="sticky top-0 bg-slate-950 text-slate-400 uppercase text-[9px] z-10">
-                                <tr>
-                                    <th class="p-2">Fecha/Hora</th>
-                                    <th class="p-2">Turno/Lote</th>
-                                    <th class="p-2 text-right">Bolsas 25k</th>
-                                    <th class="p-2 text-right">Tn Totales</th>
-                                    <th class="p-2 text-right">Hs Real</th>
-                                    <th class="p-2 text-right text-amber-400">Paradas</th>
-                                    <th class="p-2 text-right text-emerald-400">Costo $/Tn</th>
-                                    <th class="p-2 text-center">OEE</th>
-                                    <th class="p-2 text-center">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-historial-body" class="divide-y divide-slate-800 text-slate-300 font-mono text-[11px]">
-                                <!-- Dinámico -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-success" onclick="saveAdminChanges()">💾 Guardar y Sincronizar INDEX</button>
+          <button class="btn btn-danger" onclick="closeAdminPanel()">✕ Cerrar Panel</button>
         </div>
+      </div>
+
+      <!-- SECCIÓN ADMIN 1: PARÁMETROS -->
+      <section class="section-card">
+        <div class="section-title">1. Parámetros Financieros Base del Sector</div>
+        <div class="grid-4">
+          <div class="form-group">
+            <label>Costo Base Hora Planta ($/Hs)</label>
+            <input type="number" id="baseHourlyCost" value="85000" onchange="calculateAdminDeviations()">
+          </div>
+          <div class="form-group">
+            <label>Operarios Asignados</label>
+            <input type="number" id="opCount" value="12" onchange="calculateAdminDeviations()">
+          </div>
+          <div class="form-group">
+            <label>Horas Turno Teóricas</label>
+            <input type="number" id="shiftHours" value="8" onchange="calculateAdminDeviations()">
+          </div>
+          <div class="form-group">
+            <label>Costo Ineficiencia Calculado ($/Min)</label>
+            <input type="text" id="costPerMin" value="$ 0,00" readonly style="background: rgba(0,0,0,0.3); font-weight: bold; color: var(--accent-yellow);">
+          </div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN ADMIN 2: TABLA DE TIEMPOS MEDIOS ESPERADOS VS REALES -->
+      <section class="section-card">
+        <div class="section-title">
+          <span>2. Matriz de Tiempos Medios Esperados vs. Reales</span>
+          <button class="btn btn-sm" onclick="addAdminTask()">+ Agregar Tarea</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Tarea / Actividad Operativa</th>
+              <th style="width: 120px;">Tiempo Esperado (Min)</th>
+              <th style="width: 120px;">Tiempo Real (Min)</th>
+              <th style="width: 110px;">Frecuencia / Jornada</th>
+              <th style="width: 120px;">Desvío Total (Min)</th>
+              <th style="width: 150px;">Impacto Financiero ($)</th>
+              <th style="width: 40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="adminTasksTbody">
+            <!-- Filas generadas dinámicamente -->
+          </tbody>
+        </table>
+      </section>
+
+      <!-- SECCIÓN ADMIN 3: VARIABLES DE LA IMAGEN DE PLANTA -->
+      <section class="section-card">
+        <div class="section-title">3. Variables Cuantitativas de Control de Planta (Tu Lista de Campo)</div>
+        <div class="grid-4">
+          <div class="form-group"><label>Tn Objetivo</label><input type="number" id="v_tn_objetivo" value="500"></div>
+          <div class="form-group"><label>Cant. Granulometrías</label><input type="number" id="v_cant_granulometrias" value="6"></div>
+          <div class="form-group"><label>Resto Material en Tolva Final (Tn)</label><input type="number" id="v_resto_tolva" value="12"></div>
+          <div class="form-group"><label>Cant. Paradas Cambio Material / Limpieza Tolva</label><input type="number" id="v_paradas_limpieza" value="3"></div>
+
+          <div class="form-group"><label>Cant. Paradas Falta de Comunicación</label><input type="number" id="v_paradas_comunicacion" value="2"></div>
+          <div class="form-group"><label>Cant. Paradas Falta Materia en Tolva</label><input type="number" id="v_paradas_falta_materia" value="4"></div>
+          <div class="form-group"><label>Cant. Paradas Retiro Personal (Descanso/Baño)</label><input type="number" id="v_paradas_retiro_personal" value="5"></div>
+          <div class="form-group"><label>Cant. Paradas Falta de Bolsas</label><input type="number" id="v_paradas_falta_bolsas" value="1"></div>
+
+          <div class="form-group"><label>Cant. Paradas Apertura Portabolsas</label><input type="number" id="v_paradas_apertura_portabolsas" value="2"></div>
+          <div class="form-group"><label>Cant. Paradas Falta de Portabolsas</label><input type="number" id="v_paradas_falta_portabolsas" value="0"></div>
+          <div class="form-group"><label>Cant. Llamadas Atención Celulares</label><input type="number" id="v_llamadas_atencion_celular" value="4"></div>
+          <div class="form-group"><label>Cant. Rotaciones Intrajornada</label><input type="number" id="v_rotaciones_intrajornada" value="3"></div>
+
+          <div class="form-group"><label>Incidencia Mantenimiento Correctivo (Hs)</label><input type="number" step="0.1" id="v_incidencia_correctivo" value="2.5"></div>
+          <div class="form-group"><label>Incidencia Mantenimiento Preventivo (Hs)</label><input type="number" step="0.1" id="v_incidencia_preventivo" value="1.0"></div>
+          <div class="form-group"><label>Cantidad Riesgos - Tiempos Muertos</label><input type="number" id="v_tiempos_muertos_riesgo" value="6"></div>
+        </div>
+      </section>
 
     </div>
+  </div>
 
-    <!-- SCRIPT PRINCIPAL CON LÓGICA Y GRÁFICOS -->
-    <script>
-        // GLOBALES Y ESTADO
-        let chartCausales = null;
-        let chartCostos = null;
-        let historialTurnos = JSON.parse(localStorage.getItem('GF_HISTORIAL_EMBOLSADO') || '[]');
+  <script>
+    // CREDENCIALES
+    const ADMIN_USER = "gravafilt";
+    const ADMIN_PASS = "gravafilt2026";
 
-        // VALIDACIÓN DE ACCESO
-        function validarAcceso(e) {
-            e.preventDefault();
-            const u = document.getElementById('usr-login').value.trim();
-            const p = document.getElementById('pwd-login').value.trim();
+    // ESTADO GENERAL DE LA APLICACIÓN
+    let appState = {
+      baseHourlyCost: 85000,
+      opCount: 12,
+      shiftHours: 8,
+      tasks: [
+        { name: "Cambio de Material y Limpieza de Tolva", expectedMin: 20, realMin: 35, freq: 3 },
+        { name: "Puesta a Punto y Arranque de Secadero", expectedMin: 15, realMin: 30, freq: 1 },
+        { name: "Apertura y Ajuste de Portabolsas", expectedMin: 10, realMin: 18, freq: 4 },
+        { name: "Pausas / Desplazamiento no Contemplado", expectedMin: 15, realMin: 28, freq: 5 },
+        { name: "Resolución de Falta de Comunicación", expectedMin: 5, realMin: 15, freq: 2 }
+      ],
+      metrics: {
+        v_tn_objetivo: 500,
+        v_cant_granulometrias: 6,
+        v_resto_tolva: 12,
+        v_paradas_limpieza: 3,
+        v_paradas_comunicacion: 2,
+        v_paradas_falta_materia: 4,
+        v_paradas_retiro_personal: 5,
+        v_paradas_falta_bolsas: 1,
+        v_paradas_apertura_portabolsas: 2,
+        v_paradas_falta_portabolsas: 0,
+        v_llamadas_atencion_celular: 4,
+        v_rotaciones_intrajornada: 3,
+        v_incidencia_correctivo: 2.5,
+        v_incidencia_preventivo: 1.0,
+        v_tiempos_muertos_riesgo: 6
+      }
+    };
 
-            if (u === "eichpredyasociados@gmail.com" && p === "Joaquin#7") {
-                document.getElementById('sec-login').classList.add('hidden');
-                document.getElementById('sec-dashboard').classList.remove('hidden');
-                inicializarGraficos();
-                recalcular();
-                renderHistorial();
-            } else {
-                document.getElementById('msg-error').classList.remove('hidden');
-            }
+    let chartTiemposInstance = null;
+    let chartCostosInstance = null;
+
+    // INICIALIZACIÓN
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      renderIndexView();
+    });
+
+    function loadState() {
+      const saved = localStorage.getItem("GRAVAFILT_APP_STATE");
+      if (saved) {
+        appState = JSON.parse(saved);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem("GRAVAFILT_APP_STATE", JSON.stringify(appState));
+    }
+
+    // MODAL LOGIN
+    function openLoginModal() {
+      document.getElementById("loginModal").style.display = "flex";
+    }
+
+    function closeLoginModal() {
+      document.getElementById("loginModal").style.display = "none";
+      document.getElementById("loginError").style.display = "none";
+    }
+
+    function authenticateAdmin() {
+      const u = document.getElementById("adminUser").value;
+      const p = document.getElementById("adminPass").value;
+
+      if (u === ADMIN_USER && p === ADMIN_PASS) {
+        closeLoginModal();
+        openAdminPanel();
+      } else {
+        document.getElementById("loginError").style.display = "block";
+      }
+    }
+
+    // PANEL ADMIN
+    function openAdminPanel() {
+      document.getElementById("adminPanelModal").style.display = "flex";
+      
+      // Cargar valores actuales en inputs admin
+      document.getElementById("baseHourlyCost").value = appState.baseHourlyCost;
+      document.getElementById("opCount").value = appState.opCount;
+      document.getElementById("shiftHours").value = appState.shiftHours;
+
+      Object.keys(appState.metrics).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.value = appState.metrics[key];
+      });
+
+      renderAdminTasks();
+      calculateAdminDeviations();
+    }
+
+    function closeAdminPanel() {
+      document.getElementById("adminPanelModal").style.display = "none";
+    }
+
+    function renderAdminTasks() {
+      const tbody = document.getElementById("adminTasksTbody");
+      tbody.innerHTML = "";
+
+      appState.tasks.forEach((task, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input type="text" value="${task.name}" onchange="updateAdminTask(${idx}, 'name', this.value)" style="width:100%;"></td>
+          <td><input type="number" value="${task.expectedMin}" onchange="updateAdminTask(${idx}, 'expectedMin', parseFloat(this.value))" style="width:100%;"></td>
+          <td><input type="number" value="${task.realMin}" onchange="updateAdminTask(${idx}, 'realMin', parseFloat(this.value))" style="width:100%;"></td>
+          <td><input type="number" value="${task.freq}" onchange="updateAdminTask(${idx}, 'freq', parseFloat(this.value))" style="width:100%;"></td>
+          <td id="admin-dev-min-${idx}" style="font-weight:bold;">0 Min</td>
+          <td id="admin-dev-cost-${idx}" style="font-weight:bold; color:var(--accent-red);">$ 0,00</td>
+          <td><button class="btn btn-sm btn-danger" onclick="removeAdminTask(${idx})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateAdminTask(idx, field, val) {
+      appState.tasks[idx][field] = val;
+      calculateAdminDeviations();
+    }
+
+    function addAdminTask() {
+      appState.tasks.push({ name: "Nueva Actividad", expectedMin: 10, realMin: 15, freq: 1 });
+      renderAdminTasks();
+      calculateAdminDeviations();
+    }
+
+    function removeAdminTask(idx) {
+      appState.tasks.splice(idx, 1);
+      renderAdminTasks();
+      calculateAdminDeviations();
+    }
+
+    function calculateAdminDeviations() {
+      const baseCost = parseFloat(document.getElementById("baseHourlyCost").value) || 0;
+      const costPerMin = baseCost / 60;
+      document.getElementById("costPerMin").value = `$ ${costPerMin.toLocaleString('es-AR', {minimumFractionDigits:2})} /min`;
+
+      appState.tasks.forEach((task, idx) => {
+        const devMin = (task.realMin - task.expectedMin) * (task.freq || 1);
+        const devCost = devMin * costPerMin;
+
+        const devMinEl = document.getElementById(`admin-dev-min-${idx}`);
+        const devCostEl = document.getElementById(`admin-dev-cost-${idx}`);
+
+        if (devMinEl && devCostEl) {
+          devMinEl.innerText = `${devMin > 0 ? '+' : ''}${devMin} Min`;
+          devMinEl.className = devMin > 0 ? "deviation-positive" : "deviation-negative";
+          devCostEl.innerText = `$ ${devCost.toLocaleString('es-AR', {minimumFractionDigits:2})}`;
         }
+      });
+    }
 
-        // CÁLCULO PRINCIPAL
-        function recalcular() {
-            // 1. Lectura de Parámetros de Configuración
-            const capBigBagTn = parseFloat(document.getElementById('cfg-capacidad-bb').value) || 1.25;
-            const bolsasPerBB = capBigBagTn / 0.025;
-            document.getElementById('lbl-bolsas-per-bb').innerText = Math.round(bolsasPerBB) + " bolsas";
+    function saveAdminChanges() {
+      // Guardar entradas
+      appState.baseHourlyCost = parseFloat(document.getElementById("baseHourlyCost").value) || 0;
+      appState.opCount = parseFloat(document.getElementById("opCount").value) || 0;
+      appState.shiftHours = parseFloat(document.getElementById("shiftHours").value) || 0;
 
-            const velOptimaBolsasHs = parseFloat(document.getElementById('cfg-vel-optima').value) || 400;
-            const tnOptimaHs = velOptimaBolsasHs * 0.025;
-            document.getElementById('lbl-tn-optima-hs').innerText = tnOptimaHs.toFixed(2) + " Tn/hs";
+      const metricInputs = document.querySelectorAll("[id^='v_']");
+      metricInputs.forEach(input => {
+        appState.metrics[input.id] = parseFloat(input.value) || input.value;
+      });
 
-            // 2. Lectura de Carga de Turno
-            const bolsasProducidas = parseFloat(document.getElementById('inp-bolsas-prod').value) || 0;
-            const tnProducidas = bolsasProducidas * 0.025;
-            const bigBagsEquivalentes = capBigBagTn > 0 ? (tnProducidas / capBigBagTn) : 0;
+      saveState();
+      renderIndexView();
+      closeAdminPanel();
+      alert("¡Sincronización Exitosa! Los tableros del panel principal han sido actualizados.");
+    }
 
-            const tiempoRealHs = parseFloat(document.getElementById('inp-tiempo-real-hs').value) || 0.001;
-            const tiempoTeoricoHs = velOptimaBolsasHs > 0 ? (bolsasProducidas / velOptimaBolsasHs) : 0;
-            document.getElementById('lbl-tiempo-teorico-hs').innerText = tiempoTeoricoHs.toFixed(2) + " hs";
+    // RENDIRIZACIÓN DE INDEX
+    function renderIndexView() {
+      const costPerMin = appState.baseHourlyCost / 60;
+      let totalDevMin = 0;
+      let totalDevCost = 0;
 
-            // 3. Causales de Parada y Desvíos
-            const cArena = parseFloat(document.getElementById('causa-arena').value) || 0;
-            const cMecanica = parseFloat(document.getElementById('causa-mecanica').value) || 0;
-            const cInsumos = parseFloat(document.getElementById('causa-insumos').value) || 0;
-            const cLogistica = parseFloat(document.getElementById('causa-logistica').value) || 0;
+      const labels = [];
+      const expectedArr = [];
+      const realArr = [];
+      const costArr = [];
 
-            const totalParadasHs = cArena + cMecanica + cInsumos + cLogistica;
-            document.getElementById('lbl-total-paradas').innerText = totalParadasHs.toFixed(2) + " hs";
+      appState.tasks.forEach(task => {
+        const devMin = (task.realMin - task.expectedMin) * (task.freq || 1);
+        const costImpact = devMin * costPerMin;
 
-            const desvioHs = tiempoRealHs - tiempoTeoricoHs;
-            const desvioPct = tiempoTeoricoHs > 0 ? ((desvioHs / tiempoTeoricoHs) * 100) : 0;
+        totalDevMin += devMin;
+        if (costImpact > 0) totalDevCost += costImpact;
 
-            document.getElementById('kpi-desvio-hs').innerText = desvioHs.toFixed(2) + " hs";
-            document.getElementById('kpi-desvio-pct').innerText = (desvioPct >= 0 ? "+" : "") + desvioPct.toFixed(1) + "% vs Óptimo";
+        labels.push(task.name);
+        expectedArr.push(task.expectedMin * task.freq);
+        realArr.push(task.realMin * task.freq);
+        costArr.push(costImpact > 0 ? costImpact : 0);
+      });
 
-            // 4. Eficiencia / OEE / Alertas por Colores
-            const oee = tiempoRealHs > 0 ? Math.min(100, (tiempoTeoricoHs / tiempoRealHs) * 100) : 0;
-            document.getElementById('kpi-oee').innerText = oee.toFixed(1) + "%";
+      // Actualizar KPIs
+      document.getElementById("kpi-tn-objetivo").innerText = `${appState.metrics.v_tn_objetivo || 0} Tn`;
+      document.getElementById("kpi-costo-hora").innerText = `$ ${appState.baseHourlyCost.toLocaleString('es-AR')}`;
+      document.getElementById("kpi-desvio-min").innerText = `+${totalDevMin} Min`;
+      document.getElementById("kpi-impacto-costo").innerText = `$ ${totalDevCost.toLocaleString('es-AR', {maximumFractionDigits:0})}`;
 
-            const cardOee = document.getElementById('card-oee');
-            const badgeOee = document.getElementById('badge-oee');
-            const badgeStatus = document.getElementById('badge-status-general');
+      // Actualizar Tabla Cuantitativa
+      const tbody = document.getElementById("indexTbodyVariables");
+      tbody.innerHTML = `
+        <tr><td>Cant. Paradas por Falta de Materia en Tolva</td><td><b>${appState.metrics.v_paradas_falta_materia}</b></td><td>Paradas de Alimentación</td></tr>
+        <tr><td>Cant. Paradas por Falta de Comunicación</td><td><b>${appState.metrics.v_paradas_comunicacion}</b></td><td>Coordinación Operativa</td></tr>
+        <tr><td>Cant. Paradas por Retiro de Personal (Baño/Descanso)</td><td><b>${appState.metrics.v_paradas_retiro_personal}</b></td><td>Gestión de Turnos</td></tr>
+        <tr><td>Llamadas de Atención por Uso de Celulares</td><td><b>${appState.metrics.v_llamadas_atencion_celular}</b></td><td>Conducta y Riesgo</td></tr>
+        <tr><td>Incidencia Mantenimiento Correctivo</td><td><b>${appState.metrics.v_incidencia_correctivo} Hs</b></td><td>Fallas Mecánicas/Eléctricas</td></tr>
+      `;
 
-            if (oee >= 85) {
-                cardOee.className = "bg-slate-950 px-4 py-2.5 rounded-xl border border-emerald-500/30 text-right";
-                badgeOee.className = "text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold";
-                badgeOee.innerText = "ÓPTIMO";
-                badgeStatus.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-                badgeStatus.innerHTML = '<i class="fa-solid fa-circle text-[8px] mr-1"></i> OPERACIÓN NORMAL';
-            } else if (oee >= 70) {
-                cardOee.className = "bg-slate-950 px-4 py-2.5 rounded-xl border border-amber-500/40 text-right";
-                badgeOee.className = "text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-semibold";
-                badgeOee.innerText = "ALERTA / DESVÍO";
-                badgeStatus.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
-                badgeStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-[8px] mr-1"></i> DESVÍO MODERADO';
-            } else {
-                cardOee.className = "bg-slate-950 px-4 py-2.5 rounded-xl border border-red-500/50 text-right animate-pulse";
-                badgeOee.className = "text-[9px] px-1.5 py-0.2 rounded bg-red-500/20 text-red-400 font-bold";
-                badgeOee.innerText = "CRÍTICO";
-                badgeStatus.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
-                badgeStatus.innerHTML = '<i class="fa-solid fa-bell text-[8px] mr-1"></i> INEFICIENCIA CRÍTICA';
-            }
+      // Renderizar Gráficos de INDEX
+      renderIndexCharts(labels, expectedArr, realArr, costArr);
+    }
 
-            // 5. CÁLCULO ESTRUCTURADO DE COSTOS (DIRECTOS E INDIRECTOS)
-            const cBolsa25 = parseFloat(document.getElementById('costo-bolsa-25').value) || 0;
-            const cBigBag = parseFloat(document.getElementById('costo-bigbag-un').value) || 0;
-            const cStretchHs = parseFloat(document.getElementById('costo-stretch-hs').value) || 0;
-            const cMoHs = parseFloat(document.getElementById('costo-mo-hs').value) || 0;
-            const cEnergiaHs = parseFloat(document.getElementById('costo-energia-hs').value) || 0;
-            const cMaintHs = parseFloat(document.getElementById('costo-maint-hs').value) || 0;
-            const cIndirectosHs = parseFloat(document.getElementById('costo-indirectos-hs').value) || 0;
-            const mermaPct = parseFloat(document.getElementById('costo-merma-pct').value) || 0;
+    function renderIndexCharts(labels, expected, real, costs) {
+      // Gráfico Barras Tiempos
+      const ctx1 = document.getElementById('indexChartTiempos').getContext('2d');
+      if (chartTiemposInstance) chartTiemposInstance.destroy();
 
-            // Costo total de envases por hora real
-            const bolsasPorHsReal = bolsasProducidas / tiempoRealHs;
-            const bigBagsPorHsReal = bigBagsEquivalentes / tiempoRealHs;
-
-            const costoInsumosEnvaseHs = ((bolsasPorHsReal * cBolsa25) + (bigBagsPorHsReal * cBigBag)) * (1 + (mermaPct/100));
-
-            const costoTotalHoraReal = costoInsumosEnvaseHs + cStretchHs + cMoHs + cEnergiaHs + cMaintHs + cIndirectosHs;
-            const rendRealTnHs = tiempoRealHs > 0 ? (tnProducidas / tiempoRealHs) : 0;
-            const costoSeparableTnReal = rendRealTnHs > 0 ? (costoTotalHoraReal / rendRealTnHs) : 0;
-
-            // Sobrecosto por horas perdidas
-            const costoPorHoraOp = cMoHs + cEnergiaHs + cMaintHs + cIndirectosHs;
-            const sobrecostoParadas = totalParadasHs * costoPorHoraOp;
-
-            // Displays
-            document.getElementById('kpi-costo-hora').innerText = "$ " + costoTotalHoraReal.toLocaleString('es-AR', {minimumFractionDigits: 2}) + " / hs";
-            document.getElementById('kpi-costo-tn').innerText = "$ " + costoSeparableTnReal.toLocaleString('es-AR', {minimumFractionDigits: 2}) + " / tn";
-            document.getElementById('disp-tn-real').innerText = tnProducidas.toFixed(2) + " Tn";
-            document.getElementById('disp-bb-real').innerText = Math.round(bigBagsEquivalentes) + " Big Bags (" + capBigBagTn + "t)";
-            document.getElementById('disp-rend-real').innerText = rendRealTnHs.toFixed(2) + " Tn/hs";
-            document.getElementById('disp-sobrecosto').innerText = "$ " + sobrecostoParadas.toLocaleString('es-AR', {minimumFractionDigits: 2});
-
-            // Guardar global para Sync VNR
-            window.costoSeparableFinalTn = costoSeparableTnReal;
-
-            // 6. RENDER DE TABLA DE DESGLOSE
-            const desglose = [
-                { concepto: 'Bolsas 25kg + Big Bags (con merma)', hs: costoInsumosEnvaseHs },
-                { concepto: 'Insumos Palletizado & Stretch', hs: cStretchHs },
-                { concepto: 'Mano de Obra Directa (Dotación/Turno)', hs: cMoHs },
-                { concepto: 'Energía Eléctrica Operativa', hs: cEnergiaHs },
-                { concepto: 'Mantenimiento & Desgaste Mecánico', hs: cMaintHs },
-                { concepto: 'Indirectos, Supervisión & Amortización', hs: cIndirectosHs }
-            ];
-
-            let htmlTbl = '';
-            desglose.forEach(item => {
-                const itemTn = rendRealTnHs > 0 ? (item.hs / rendRealTnHs) : 0;
-                const pct = costoTotalHoraReal > 0 ? ((item.hs / costoTotalHoraReal) * 100) : 0;
-
-                htmlTbl += `
-                <tr class="hover:bg-slate-800/40">
-                    <td class="p-2.5 font-semibold text-white">${item.concepto}</td>
-                    <td class="p-2.5 text-right font-mono text-slate-300">$ ${item.hs.toFixed(2)}</td>
-                    <td class="p-2.5 text-right font-mono font-bold text-amber-400">$ ${itemTn.toFixed(2)}</td>
-                    <td class="p-2.5 text-right font-mono text-slate-400">${pct.toFixed(1)}%</td>
-                </tr>`;
-            });
-            document.getElementById('tbl-desglose-body').innerHTML = htmlTbl;
-
-            // 7. ACTUALIZACIÓN DE GRÁFICOS
-            actualizarGraficos(cArena, cMecanica, cInsumos, cLogistica, desglose, rendRealTnHs);
+      chartTiemposInstance = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Tiempo Esperado (Min)', data: expected, backgroundColor: '#3b82f6' },
+            { label: 'Tiempo Real (Min)', data: real, backgroundColor: '#ef4444' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#f8fafc' } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+          }
         }
+      });
 
-        // INICIALIZACIÓN Y ACTUALIZACIÓN DE CHART.JS
-        function inicializarGraficos() {
-            const ctx1 = document.getElementById('chart-causales').getContext('2d');
-            chartCausales = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Falta Arena', 'Falla Mecánica', 'Falta Insumos', 'Atasco/Logística'],
-                    datasets: [{
-                        data: [0.75, 0.5, 0.25, 0.5],
-                        backgroundColor: ['#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
-                    }
-                }
-            });
+      // Gráfico Torta Costos
+      const ctx2 = document.getElementById('indexChartCostos').getContext('2d');
+      if (chartCostosInstance) chartCostosInstance.destroy();
 
-            const ctx2 = document.getElementById('chart-costos').getContext('2d');
-            chartCostos = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: ['Envases', 'Pallet', 'MO', 'Energía', 'Maint.', 'Indir.'],
-                    datasets: [{
-                        label: '$/Tn Real',
-                        data: [0, 0, 0, 0, 0, 0],
-                        backgroundColor: '#10b981'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
-                        y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: '#334155' } }
-                    }
-                }
-            });
+      chartCostosInstance = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: costs,
+            backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#6366f1']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { color: '#f8fafc', font: { size: 10 } } } }
         }
-
-        function actualizarGraficos(cArena, cMecanica, cInsumos, cLogistica, desglose, rendTnHs) {
-            if (!chartCausales || !chartCostos) return;
-
-            chartCausales.data.datasets[0].data = [cArena, cMecanica, cInsumos, cLogistica];
-            chartCausales.update();
-
-            const datosTn = desglose.map(d => rendTnHs > 0 ? (d.hs / rendTnHs) : 0);
-            chartCostos.data.datasets[0].data = datosTn;
-            chartCostos.update();
-        }
-
-        // HISTORIAL Y PERSISTENCIA EN EL NAVEGADOR (LOCALSTORAGE)
-        function guardarEnHistorial() {
-            const turnoId = document.getElementById('inp-turno-id').value || "Turno Sin Nombre";
-            const bolsas = parseFloat(document.getElementById('inp-bolsas-prod').value) || 0;
-            const tn = bolsas * 0.025;
-            const hsReal = parseFloat(document.getElementById('inp-tiempo-real-hs').value) || 0;
-            const paradas = parseFloat(document.getElementById('lbl-total-paradas').innerText) || 0;
-            const costoTn = window.costoSeparableFinalTn || 0;
-            const oee = parseFloat(document.getElementById('kpi-oee').innerText) || 0;
-
-            const registro = {
-                id: Date.now(),
-                fecha: new Date().toLocaleString('es-AR'),
-                turno: turnoId,
-                bolsas: bolsas,
-                tn: tn,
-                hsReal: hsReal,
-                paradas: paradas,
-                costoTn: costoTn,
-                oee: oee
-            };
-
-            historialTurnos.unshift(registro);
-            localStorage.setItem('GF_HISTORIAL_EMBOLSADO', JSON.stringify(historialTurnos));
-            renderHistorial();
-            alert('✅ Registro guardado en el historial persistente del sitio.');
-        }
-
-        function eliminarHistorial(id) {
-            if (confirm('¿Desea eliminar este registro del historial?')) {
-                historialTurnos = historialTurnos.filter(item => item.id !== id);
-                localStorage.setItem('GF_HISTORIAL_EMBOLSADO', JSON.stringify(historialTurnos));
-                renderHistorial();
-            }
-        }
-
-        function renderHistorial() {
-            let html = '';
-            if (historialTurnos.length === 0) {
-                html = `<tr><td colspan="9" class="p-4 text-center text-slate-500 italic">No hay turnos registrados en el historial aún.</td></tr>`;
-            } else {
-                historialTurnos.forEach(item => {
-                    html += `
-                    <tr class="hover:bg-slate-800/50">
-                        <td class="p-2 text-slate-400">${item.fecha}</td>
-                        <td class="p-2 font-bold text-white">${item.turno}</td>
-                        <td class="p-2 text-right">${item.bolsas}</td>
-                        <td class="p-2 text-right">${item.tn.toFixed(2)}</td>
-                        <td class="p-2 text-right">${item.hsReal.toFixed(1)} hs</td>
-                        <td class="p-2 text-right text-amber-400">${item.paradas.toFixed(2)} hs</td>
-                        <td class="p-2 text-right font-bold text-emerald-400">$ ${item.costoTn.toFixed(2)}</td>
-                        <td class="p-2 text-center font-bold ${item.oee >= 85 ? 'text-emerald-400' : 'text-amber-400'}">${item.oee.toFixed(1)}%</td>
-                        <td class="p-2 text-center">
-                            <button onclick="eliminarHistorial(${item.id})" class="text-red-400 hover:text-red-300 transition">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-            }
-            document.getElementById('tbl-historial-body').innerHTML = html;
-        }
-
-        // EXPORTACIÓN A EXCEL (.XLSX) CON SHEETJS
-        function exportarExcelProfesional() {
-            if (historialTurnos.length === 0) {
-                alert('No hay datos registrados en el historial para exportar.');
-                return;
-            }
-
-            const dataExcel = historialTurnos.map(item => ({
-                "Fecha / Hora": item.fecha,
-                "Identificador de Turno": item.turno,
-                "Bolsas 25kg Producidas": item.bolsas,
-                "Toneladas Totales": item.tn,
-                "Horas Reales Operadas": item.hsReal,
-                "Horas de Parada Registradas": item.paradas,
-                "OEE Sector (%)": item.oee,
-                "Costo Separable ($/Tn)": item.costoTn
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(dataExcel);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Historial_Embolsado");
-
-            // Generar archivo .XLSX
-            XLSX.writeFile(workbook, "GRAVAFILT_Monitoreo_Embolsado_" + new Date().toISOString().slice(0,10) + ".xlsx");
-        }
-
-        // EXPORTACIÓN Y CIFRADO PARA LA MATRIZ VNR
-        function exportarAMatrizVNR() {
-            const claveSecreta = "GRAVAFILT_SECURE_KEY_2026";
-            const payload = JSON.stringify({ 
-                costoTn: window.costoSeparableFinalTn || 0, 
-                oee: parseFloat(document.getElementById('kpi-oee').innerText) || 0,
-                fecha: new Date() 
-            });
-            
-            const cifrado = CryptoJS.AES.encrypt(payload, claveSecreta).toString();
-            localStorage.setItem('GF_EMBOLSADO_DATA', cifrado);
-            alert('🚀 Parámetros y costo separable ($' + (window.costoSeparableFinalTn || 0).toFixed(2) + '/Tn) exportados y cifrados con éxito para la Matriz VNR Principal.');
-        }
-    </script>
+      });
+    }
+  </script>
 </body>
 </html>
